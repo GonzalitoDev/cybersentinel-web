@@ -1,0 +1,1660 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>CyberSentinel Web</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Chakra+Petch:wght@600;700&family=IBM+Plex+Mono:wght@400;600&family=IBM+Plex+Sans:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+:root {
+  /* Consola de seguridad oscura: riel de navegación + panel de trabajo; severidad por franja de color */
+  --bg: #0a0f16;
+  --panel: #101923;
+  --panel-2: #16222f;
+  --line: #223346;
+  --text: #e3ebf2;
+  --dim: #8b9bad;
+  --green: #00e5a0;
+  --blue: #38bdf8;
+  --crit: #ff4d6d;
+  --high: #ff8a3d;
+  --med: #ffc53d;
+  --low: #7dd3fc;
+  --safe: #00e5a0;
+  --font-display: "Chakra Petch", "Segoe UI", system-ui, sans-serif;
+  --font-body: "IBM Plex Sans", "Segoe UI", system-ui, sans-serif;
+  --font-mono: "IBM Plex Mono", ui-monospace, "Cascadia Mono", monospace;
+  color-scheme: dark;
+}
+* { box-sizing: border-box; }
+html, body { height: 100%; margin: 0; }
+body { background: var(--bg); color: var(--text); font: 15px/1.5 var(--font-body); }
+button, input, select { font: inherit; }
+a { color: var(--blue); }
+:focus-visible { outline: 2px solid var(--blue); outline-offset: 2px; }
+
+.shell { display: grid; grid-template-columns: 220px 1fr; min-height: 100%; }
+nav.rail { background: var(--panel); border-right: 1px solid var(--line); padding: 18px 12px; display: flex; flex-direction: column; gap: 4px; position: sticky; top: 0; height: 100vh; }
+.brand { font: 700 20px/1 var(--font-display); letter-spacing: .06em; padding: 4px 10px 2px; }
+.brand b { color: var(--green); font-weight: 700; } .brand span { color: var(--blue); }
+.brand-sub { font: 11px var(--font-mono); color: var(--dim); padding: 0 10px 16px; letter-spacing: .04em; }
+nav.rail a { display: flex; justify-content: space-between; align-items: center; padding: 9px 10px; border-radius: 8px; color: var(--dim); text-decoration: none; font-weight: 500; }
+nav.rail a:hover { background: var(--panel-2); color: var(--text); }
+nav.rail a.on { background: rgba(0, 229, 160, .1); color: var(--green); }
+nav.rail .count { font: 11px var(--font-mono); background: var(--panel-2); border-radius: 10px; padding: 1px 7px; color: var(--dim); }
+nav.rail .foot { margin-top: auto; font-size: 12px; color: var(--dim); padding: 10px; border-top: 1px solid var(--line); }
+
+main { padding: 26px clamp(16px, 4vw, 44px) 60px; max-width: 1120px; width: 100%; }
+h1 { font: 600 26px/1.2 var(--font-display); margin: 0 0 4px; text-wrap: balance; letter-spacing: .02em; }
+h2 { font: 600 13px var(--font-mono); text-transform: uppercase; letter-spacing: .12em; color: var(--blue); margin: 28px 0 10px; }
+.lead { color: var(--dim); margin: 0 0 18px; max-width: 70ch; }
+.muted { color: var(--dim); } .small { font-size: 13px; } .mono { font-family: var(--font-mono); font-size: 12px; word-break: break-all; }
+
+.card { background: var(--panel); border: 1px solid var(--line); border-radius: 12px; padding: 16px; }
+.grid { display: grid; gap: 12px; }
+.g2 { grid-template-columns: repeat(2, minmax(0, 1fr)); } .g4 { grid-template-columns: repeat(4, minmax(0, 1fr)); }
+.row { display: flex; gap: 10px; align-items: center; flex-wrap: wrap; }
+.spacer { flex: 1; }
+
+.btn { border: 1px solid var(--line); background: var(--panel-2); color: var(--text); padding: 10px 16px; border-radius: 9px; cursor: pointer; font-weight: 600; }
+.btn:hover:not(:disabled) { border-color: var(--blue); }
+.btn:disabled { opacity: .45; cursor: not-allowed; }
+.btn.primary { background: var(--green); color: #00281b; border-color: var(--green); }
+.btn.blue { background: transparent; color: var(--blue); border-color: var(--blue); }
+.btn.danger { background: transparent; color: var(--crit); border-color: rgba(255, 77, 109, .6); }
+.btn.ghost { background: transparent; border-color: transparent; color: var(--blue); padding: 6px 8px; }
+.btn.big { padding: 14px 20px; font-size: 16px; }
+
+.hero { display: grid; grid-template-columns: 220px 1fr; gap: 28px; align-items: center; }
+.ring { position: relative; width: 210px; height: 210px; }
+.ring svg { width: 100%; height: 100%; }
+.ring .center { position: absolute; inset: 0; display: grid; place-content: center; text-align: center; padding: 30px; }
+.ring .lvl { font: 700 24px var(--font-display); letter-spacing: .05em; }
+.ring .txt { font-size: 12px; color: var(--dim); }
+@keyframes spin { to { transform: rotate(360deg); } }
+@keyframes pulse { 50% { opacity: .45; } }
+.spinning { transform-origin: 50% 50%; animation: spin 2.4s linear infinite; }
+.pulsing { animation: pulse 2.6s ease-in-out infinite; }
+@media (prefers-reduced-motion: reduce) { .spinning, .pulsing { animation: none; } }
+
+.tile .n { font: 600 28px var(--font-display); font-variant-numeric: tabular-nums; }
+.tile .l { font-size: 12px; color: var(--dim); }
+
+.pill { font: 700 11px var(--font-mono); padding: 3px 8px; border-radius: 6px; border: 1px solid currentColor; white-space: nowrap; letter-spacing: .04em; }
+.L-CRITICAL { color: var(--crit); } .L-HIGH { color: var(--high); } .L-MEDIUM { color: var(--med); } .L-LOW { color: var(--low); } .L-SAFE { color: var(--safe); }
+.bg-CRITICAL { background: rgba(255, 77, 109, .12); } .bg-HIGH { background: rgba(255, 138, 61, .12); } .bg-MEDIUM { background: rgba(255, 197, 61, .1); } .bg-LOW { background: rgba(125, 211, 252, .1); } .bg-SAFE { background: rgba(0, 229, 160, .1); }
+
+.list { display: flex; flex-direction: column; gap: 8px; }
+.item { display: grid; grid-template-columns: 4px 1fr auto; gap: 14px; align-items: center; background: var(--panel); border: 1px solid var(--line); border-radius: 10px; padding: 12px 14px 12px 0; cursor: pointer; text-align: left; color: inherit; width: 100%; }
+.item:hover { border-color: var(--blue); }
+.item .stripe { align-self: stretch; border-radius: 0 3px 3px 0; }
+.item .name { font-weight: 600; overflow-wrap: anywhere; }
+.item .sub { font-size: 13px; color: var(--dim); overflow-wrap: anywhere; }
+.s-CRITICAL { background: var(--crit); } .s-HIGH { background: var(--high); } .s-MEDIUM { background: var(--med); } .s-LOW { background: var(--low); } .s-SAFE { background: var(--line); }
+
+.chips { display: flex; gap: 8px; flex-wrap: wrap; margin: 0 0 12px; }
+.chip { border: 1px solid var(--line); background: transparent; color: var(--dim); border-radius: 20px; padding: 5px 12px; cursor: pointer; font-size: 13px; }
+.chip.on { border-color: var(--green); color: var(--green); background: rgba(0, 229, 160, .08); }
+
+.drop { border: 1.5px dashed var(--line); border-radius: 12px; padding: 22px; text-align: center; color: var(--dim); }
+.drop.over { border-color: var(--green); color: var(--green); background: rgba(0, 229, 160, .05); }
+
+.progress { height: 8px; background: var(--panel-2); border-radius: 6px; overflow: hidden; }
+.progress > div { height: 100%; background: linear-gradient(90deg, var(--blue), var(--green)); width: 0; transition: width .2s; }
+.progress.indet > div { width: 30%; animation: indet 1.2s ease-in-out infinite; }
+@keyframes indet { from { transform: translateX(-100%); } to { transform: translateX(340%); } }
+
+.kv { display: grid; grid-template-columns: 180px 1fr; gap: 6px 14px; font-size: 14px; }
+.kv dt { color: var(--dim); } .kv dd { margin: 0; overflow-wrap: anywhere; }
+ul.reasons { margin: 0; padding-left: 18px; } ul.reasons li { margin: 4px 0; }
+
+.modal-bg { position: fixed; inset: 0; background: rgba(3, 7, 12, .72); display: grid; place-items: center; padding: 16px; z-index: 20; }
+.modal { background: var(--panel); border: 1px solid var(--line); border-radius: 14px; width: min(720px, 100%); max-height: 88vh; overflow: auto; padding: 22px; }
+.modal h3 { font: 600 20px var(--font-display); margin: 0 0 6px; overflow-wrap: anywhere; }
+.toast { position: fixed; bottom: 20px; left: 50%; transform: translateX(-50%); background: var(--panel-2); border: 1px solid var(--green); color: var(--text); padding: 10px 16px; border-radius: 10px; z-index: 30; max-width: 90vw; }
+.banner { border: 1px solid rgba(255, 197, 61, .5); background: rgba(255, 197, 61, .07); color: var(--text); border-radius: 10px; padding: 10px 14px; font-size: 14px; }
+input[type="text"], input[type="number"] { background: var(--bg); border: 1px solid var(--line); color: var(--text); border-radius: 8px; padding: 9px 11px; width: 100%; }
+table.t { width: 100%; border-collapse: collapse; font-size: 13px; }
+table.t td, table.t th { border-bottom: 1px solid var(--line); padding: 7px 6px; text-align: left; vertical-align: top; }
+table.t th { color: var(--dim); font-weight: 500; }
+.hidden { display: none !important; }
+
+@media (max-width: 820px) {
+  .shell { grid-template-columns: 1fr; }
+  nav.rail { position: sticky; top: 0; z-index: 10; height: auto; flex-direction: row; overflow-x: auto; padding: 8px; gap: 2px; }
+  nav.rail .brand, nav.rail .brand-sub, nav.rail .foot { display: none; }
+  nav.rail a { white-space: nowrap; padding: 8px 10px; }
+  .hero { grid-template-columns: 1fr; justify-items: center; text-align: center; }
+  .hero .row { justify-content: center; }
+  .g4 { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+  .kv { grid-template-columns: 1fr; } .kv dt { margin-top: 6px; }
+}
+@media (max-width: 400px) { .g2 { grid-template-columns: 1fr; } }
+
+</style>
+</head>
+<body>
+<div class="shell">
+  <nav class="rail" aria-label="Secciones">
+    <div class="brand"><b>CYBER</b><span>SENTINEL</span></div>
+    <div class="brand-sub">ANÁLISIS LOCAL · SIN SUBIDAS</div>
+    <a href="#inicio">Inicio</a>
+    <a href="#archivos">Archivos</a>
+    <a href="#apk">APK y apps</a>
+    <a href="#informe">Informe</a>
+    <a href="#historial">Historial</a>
+    <a href="#cuarentena">Cuarentena <span class="count" id="nav-q">0</span></a>
+    <a href="#ajustes">Configuración</a>
+    <a href="#registro">Registro</a>
+    <div class="foot">Los archivos se analizan en este navegador y nunca se envían a ningún servidor.</div>
+  </nav>
+  <main id="main"><p class="muted">Cargando…</p></main>
+</div>
+<input type="file" id="in-folder" class="hidden" webkitdirectory multiple>
+<input type="file" id="in-files" class="hidden" multiple>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+<script>
+/* =====================================================================
+   CyberSentinel Web — motor de análisis (100 % local, sin red)
+   ===================================================================== */
+const CS = (() => {
+  'use strict';
+
+  // ------------------------------------------------------------ niveles
+  const LEVELS = ['SAFE', 'LOW', 'MEDIUM', 'HIGH', 'CRITICAL'];
+  const LABEL = { SAFE: 'SEGURO', LOW: 'BAJO', MEDIUM: 'MEDIO', HIGH: 'ALTO', CRITICAL: 'CRÍTICO' };
+  const W = { SAFE: 0, LOW: 1, MEDIUM: 2, HIGH: 3, CRITICAL: 4 };
+  const maxLevel = (a, b) => (W[a] >= W[b] ? a : b);
+
+  // ------------------------------------------------------------ SHA-256 incremental
+  const K = new Uint32Array([
+    0x428a2f98, 0x71374491, 0xb5c0fbcf, 0xe9b5dba5, 0x3956c25b, 0x59f111f1, 0x923f82a4, 0xab1c5ed5,
+    0xd807aa98, 0x12835b01, 0x243185be, 0x550c7dc3, 0x72be5d74, 0x80deb1fe, 0x9bdc06a7, 0xc19bf174,
+    0xe49b69c1, 0xefbe4786, 0x0fc19dc6, 0x240ca1cc, 0x2de92c6f, 0x4a7484aa, 0x5cb0a9dc, 0x76f988da,
+    0x983e5152, 0xa831c66d, 0xb00327c8, 0xbf597fc7, 0xc6e00bf3, 0xd5a79147, 0x06ca6351, 0x14292967,
+    0x27b70a85, 0x2e1b2138, 0x4d2c6dfc, 0x53380d13, 0x650a7354, 0x766a0abb, 0x81c2c92e, 0x92722c85,
+    0xa2bfe8a1, 0xa81a664b, 0xc24b8b70, 0xc76c51a3, 0xd192e819, 0xd6990624, 0xf40e3585, 0x106aa070,
+    0x19a4c116, 0x1e376c08, 0x2748774c, 0x34b0bcb5, 0x391c0cb3, 0x4ed8aa4a, 0x5b9cca4f, 0x682e6ff3,
+    0x748f82ee, 0x78a5636f, 0x84c87814, 0x8cc70208, 0x90befffa, 0xa4506ceb, 0xbef9a3f7, 0xc67178f2]);
+
+  class Sha256 {
+    constructor() {
+      this.h = new Uint32Array([0x6a09e667, 0xbb67ae85, 0x3c6ef372, 0xa54ff53a, 0x510e527f, 0x9b05688c, 0x1f83d9ab, 0x5be0cd19]);
+      this.buf = new Uint8Array(64); this.bufLen = 0; this.total = 0; this.w = new Uint32Array(64);
+    }
+    _block(b, off) {
+      const w = this.w, h = this.h;
+      for (let i = 0; i < 16; i++) { const j = off + i * 4; w[i] = (b[j] << 24) | (b[j + 1] << 16) | (b[j + 2] << 8) | b[j + 3]; }
+      for (let i = 16; i < 64; i++) {
+        const x = w[i - 15], y = w[i - 2];
+        const s0 = ((x >>> 7) | (x << 25)) ^ ((x >>> 18) | (x << 14)) ^ (x >>> 3);
+        const s1 = ((y >>> 17) | (y << 15)) ^ ((y >>> 19) | (y << 13)) ^ (y >>> 10);
+        w[i] = (w[i - 16] + s0 + w[i - 7] + s1) | 0;
+      }
+      let a = h[0], bb = h[1], c = h[2], d = h[3], e = h[4], f = h[5], g = h[6], hh = h[7];
+      for (let i = 0; i < 64; i++) {
+        const S1 = ((e >>> 6) | (e << 26)) ^ ((e >>> 11) | (e << 21)) ^ ((e >>> 25) | (e << 7));
+        const ch = (e & f) ^ (~e & g);
+        const t1 = (hh + S1 + ch + K[i] + w[i]) | 0;
+        const S0 = ((a >>> 2) | (a << 30)) ^ ((a >>> 13) | (a << 19)) ^ ((a >>> 22) | (a << 10));
+        const mj = (a & bb) ^ (a & c) ^ (bb & c);
+        const t2 = (S0 + mj) | 0;
+        hh = g; g = f; f = e; e = (d + t1) | 0; d = c; c = bb; bb = a; a = (t1 + t2) | 0;
+      }
+      h[0] += a; h[1] += bb; h[2] += c; h[3] += d; h[4] += e; h[5] += f; h[6] += g; h[7] += hh;
+    }
+    update(data) {
+      let i = 0; const n = data.length; this.total += n;
+      if (this.bufLen) {
+        while (i < n && this.bufLen < 64) this.buf[this.bufLen++] = data[i++];
+        if (this.bufLen === 64) { this._block(this.buf, 0); this.bufLen = 0; }
+      }
+      for (; i + 64 <= n; i += 64) this._block(data, i);
+      while (i < n) this.buf[this.bufLen++] = data[i++];
+    }
+    hex() {
+      const bits = this.total * 8;
+      const pad = new Uint8Array(((this.bufLen < 56 ? 56 : 120) - this.bufLen) + 8);
+      pad[0] = 0x80;
+      const hi = Math.floor(bits / 0x100000000), lo = bits >>> 0;
+      const p = pad.length - 8;
+      pad[p] = hi >>> 24; pad[p + 1] = hi >>> 16; pad[p + 2] = hi >>> 8; pad[p + 3] = hi;
+      pad[p + 4] = lo >>> 24; pad[p + 5] = lo >>> 16; pad[p + 6] = lo >>> 8; pad[p + 7] = lo;
+      const total = this.total; this.update(pad); this.total = total;
+      return Array.from(this.h, x => (x >>> 0).toString(16).padStart(8, '0')).join('');
+    }
+  }
+
+  const readSlice = async (file, start, end) => new Uint8Array(await file.slice(start, end).arrayBuffer());
+
+  // ------------------------------------------------------------ tipos reales
+  const T = {
+    APK: { label: 'Paquete Android (APK)', exec: true, archive: true },
+    DEX: { label: 'Código ejecutable Android (DEX)', exec: true },
+    ELF: { label: 'Binario ejecutable Linux/Android (ELF)', exec: true },
+    PE: { label: 'Ejecutable de Windows (EXE/DLL)', exec: true },
+    JAR: { label: 'Archivo Java (JAR)', exec: true, archive: true },
+    SCRIPT: { label: 'Script ejecutable (#!)' },
+    ZIP: { label: 'Archivo comprimido ZIP', archive: true },
+    OOXML: { label: 'Documento de Office (DOCX/XLSX/PPTX)', archive: true },
+    OLE2: { label: 'Documento de Office antiguo (DOC/XLS/PPT)' },
+    PDF: { label: 'Documento PDF' },
+    RAR: { label: 'Archivo comprimido RAR', archive: true },
+    SEVEN_Z: { label: 'Archivo comprimido 7z', archive: true },
+    GZIP: { label: 'Archivo comprimido GZIP', archive: true },
+    PNG: { label: 'Imagen PNG' }, JPEG: { label: 'Imagen JPEG' }, GIF: { label: 'Imagen GIF' },
+    WEBP: { label: 'Imagen WebP' }, BMP: { label: 'Imagen BMP' },
+    ISO_MEDIA: { label: 'Audio/video/imagen ISO (MP4/M4A/3GP/HEIC)' },
+    MP3: { label: 'Audio MP3' }, OGG: { label: 'Audio OGG/Opus' }, WAV: { label: 'Audio WAV' },
+    AVI: { label: 'Video AVI' }, MATROSKA: { label: 'Video MKV/WebM' },
+    HTML: { label: 'Página HTML' }, TEXT: { label: 'Texto' }, EMPTY: { label: 'Archivo vacío' }, UNKNOWN: { label: 'Desconocido' }
+  };
+  for (const k in T) T[k].id = k;
+
+  const DOC_MEDIA_EXT = new Set(['pdf', 'doc', 'docx', 'xls', 'xlsx', 'ppt', 'pptx', 'odt', 'ods', 'odp', 'rtf', 'txt', 'csv',
+    'jpg', 'jpeg', 'png', 'gif', 'webp', 'bmp', 'heic', 'heif', 'svg', 'mp3', 'm4a', 'aac', 'ogg', 'opus', 'wav', 'flac', 'amr',
+    'mp4', '3gp', 'mkv', 'webm', 'mov', 'avi']);
+  const EXEC_EXT = new Set(['apk', 'xapk', 'apks', 'apkm', 'dex', 'so', 'jar', 'exe', 'scr', 'com', 'pif', 'bat', 'cmd', 'msi', 'dll',
+    'vbs', 'vbe', 'js', 'jse', 'wsf', 'ps1', 'hta', 'lnk', 'sh', 'elf']);
+  const EXPECTED = {
+    pdf: ['PDF'], jpg: ['JPEG'], jpeg: ['JPEG'], png: ['PNG'], gif: ['GIF'], webp: ['WEBP'], bmp: ['BMP'],
+    heic: ['ISO_MEDIA'], heif: ['ISO_MEDIA'], mp4: ['ISO_MEDIA'], m4a: ['ISO_MEDIA'], '3gp': ['ISO_MEDIA'], mov: ['ISO_MEDIA'],
+    mp3: ['MP3'], ogg: ['OGG'], opus: ['OGG'], wav: ['WAV'], avi: ['AVI'], mkv: ['MATROSKA'], webm: ['MATROSKA'],
+    docx: ['OOXML'], xlsx: ['OOXML'], pptx: ['OOXML'], docm: ['OOXML'], xlsm: ['OOXML'], pptm: ['OOXML'],
+    doc: ['OLE2'], xls: ['OLE2'], ppt: ['OLE2'], zip: ['ZIP', 'OOXML', 'JAR', 'APK'], apk: ['APK'], jar: ['JAR', 'ZIP'], dex: ['DEX'],
+    exe: ['PE'], dll: ['PE'], scr: ['PE'], rar: ['RAR'], '7z': ['SEVEN_Z'], gz: ['GZIP'], tgz: ['GZIP'],
+    txt: ['TEXT', 'EMPTY'], csv: ['TEXT', 'EMPTY'], html: ['HTML', 'TEXT'], htm: ['HTML', 'TEXT']
+  };
+
+  const extOf = name => { const d = name.lastIndexOf('.'); return d <= 0 || d === name.length - 1 ? '' : name.slice(d + 1).trim().toLowerCase(); };
+
+  function detectType(h) {
+    const n = h.length;
+    if (!n) return 'EMPTY';
+    const at = (off, ...b) => off + b.length <= n && b.every((v, i) => h[off + i] === v);
+    const asc = (off, s) => at(off, ...Array.from(s, c => c.charCodeAt(0)));
+    if (at(0, 0x50, 0x4B, 0x03, 0x04) || at(0, 0x50, 0x4B, 0x05, 0x06)) return 'ZIP';
+    if (asc(0, 'dex\n')) return 'DEX';
+    if (at(0, 0x7F, 0x45, 0x4C, 0x46)) return 'ELF';
+    if (asc(0, 'MZ') && n >= 64) return 'PE';
+    if (asc(0, '%PDF')) return 'PDF';
+    if (at(0, 0xD0, 0xCF, 0x11, 0xE0, 0xA1, 0xB1, 0x1A, 0xE1)) return 'OLE2';
+    if (asc(0, 'Rar!')) return 'RAR';
+    if (at(0, 0x37, 0x7A, 0xBC, 0xAF, 0x27, 0x1C)) return 'SEVEN_Z';
+    if (at(0, 0x1F, 0x8B)) return 'GZIP';
+    if (at(0, 0x89, 0x50, 0x4E, 0x47)) return 'PNG';
+    if (at(0, 0xFF, 0xD8, 0xFF)) return 'JPEG';
+    if (asc(0, 'GIF8')) return 'GIF';
+    if (asc(0, 'RIFF') && asc(8, 'WEBP')) return 'WEBP';
+    if (asc(0, 'RIFF') && asc(8, 'WAVE')) return 'WAV';
+    if (asc(0, 'RIFF') && asc(8, 'AVI ')) return 'AVI';
+    if (asc(4, 'ftyp')) return 'ISO_MEDIA';
+    if (asc(0, 'ID3') || (n > 1 && h[0] === 0xFF && (h[1] & 0xE0) === 0xE0)) return 'MP3';
+    if (asc(0, 'OggS')) return 'OGG';
+    if (at(0, 0x1A, 0x45, 0xDF, 0xA3)) return 'MATROSKA';
+    if (asc(0, 'BM') && n > 26) return 'BMP';
+    if (asc(0, '#!')) return 'SCRIPT';
+    const m = Math.min(n, 1024); let printable = 0;
+    for (let i = 0; i < m; i++) {
+      const b = h[i];
+      if (b === 0) return 'UNKNOWN';
+      if (b === 9 || b === 10 || b === 13 || (b >= 32 && b <= 126) || b >= 0x80) printable++;
+    }
+    if (printable < m * 0.95) return 'UNKNOWN';
+    const start = new TextDecoder().decode(h.subarray(0, Math.min(m, 512))).trimStart().toLowerCase();
+    return start.startsWith('<!doctype html') || start.startsWith('<html') ? 'HTML' : 'TEXT';
+  }
+
+  // ------------------------------------------------------------ lectura en una pasada
+  const enc = s => new TextEncoder().encode(s);
+  const utf16 = s => { const u = new Uint8Array(s.length * 2); for (let i = 0; i < s.length; i++) u[i * 2] = s.charCodeAt(i); return u; };
+  const PATTERNS = {
+    PDF: { pdf_js: enc('/JavaScript'), pdf_launch: enc('/Launch'), pdf_embedded: enc('/EmbeddedFile') },
+    OLE2: { ole_vba: utf16('_VBA_PROJECT'), ole_macros: utf16('Macros') }
+  };
+  const EICAR = 'X5O!P%@AP[4\\PZX54(P^)7CC)7}$EICAR-STANDARD-ANTIVIRUS-TEST-FILE!$H+H*';
+  const PATTERN_LIMIT = 16 * 1024 * 1024;
+  const CHUNK = 4 * 1024 * 1024;
+
+  function indexOf(data, p) {
+    outer: for (let i = 0; i <= data.length - p.length; i++) {
+      for (let j = 0; j < p.length; j++) if (data[i + j] !== p[j]) continue outer;
+      return i;
+    }
+    return -1;
+  }
+
+  /** Lee el archivo una vez: tipo, SHA-256 (si no supera el límite), patrones y EICAR. */
+  async function readContent(file, hashLimit, isCancelled) {
+    const size = file.size;
+    const doHash = size <= hashLimit;
+    const header = await readSlice(file, 0, Math.min(size, 8192));
+    const type = detectType(header);
+    let eicar = false;
+    if (size >= 68 && size <= 128) {
+      const t = new TextDecoder('latin1').decode(header);
+      eicar = t.startsWith(EICAR) && t.slice(EICAR.length).trim() === '';
+    }
+    const pats = PATTERNS[type] || {};
+    const keys = Object.keys(pats);
+    const found = new Set();
+    const maxPat = keys.reduce((m, k) => Math.max(m, pats[k].length), 1);
+    const hasher = doHash ? new Sha256() : null;
+    let carry = new Uint8Array(0);
+    for (let off = 0; off < size; off += CHUNK) {
+      if (isCancelled && isCancelled()) throw new Error('cancelado');
+      const scanning = keys.length && off < PATTERN_LIMIT && found.size < keys.length;
+      if (!hasher && !scanning) break;
+      const chunk = await readSlice(file, off, Math.min(size, off + CHUNK));
+      if (hasher) hasher.update(chunk);
+      if (scanning) {
+        const comb = new Uint8Array(carry.length + chunk.length);
+        comb.set(carry); comb.set(chunk, carry.length);
+        for (const k of keys) if (!found.has(k) && indexOf(comb, pats[k]) >= 0) found.add(k);
+        carry = comb.slice(Math.max(0, comb.length - (maxPat - 1)));
+      }
+      await new Promise(r => setTimeout(r, 0)); // deja respirar a la interfaz
+    }
+    const sha256 = hasher ? (size === 0 ? new Sha256().hex() : hasher.hex()) : null;
+    return { type, sha256, patterns: found, eicar };
+  }
+
+  // ------------------------------------------------------------ ZIP (directorio central)
+  const u16 = (b, o) => b[o] | (b[o + 1] << 8);
+  const u32 = (b, o) => (b[o] | (b[o + 1] << 8) | (b[o + 2] << 16) | (b[o + 3] << 24)) >>> 0;
+
+  async function zipEntries(file) {
+    const tailLen = Math.min(file.size, 65557);
+    const tail = await readSlice(file, file.size - tailLen, file.size);
+    let eocd = -1;
+    for (let i = tail.length - 22; i >= 0; i--) if (u32(tail, i) === 0x06054b50) { eocd = i; break; }
+    if (eocd < 0) return null;
+    const count = u16(tail, eocd + 10), cdSize = u32(tail, eocd + 12), cdOff = u32(tail, eocd + 16);
+    if (cdOff === 0xFFFFFFFF || cdOff + cdSize > file.size) return null; // ZIP64 no soportado
+    const cd = await readSlice(file, cdOff, cdOff + cdSize);
+    const entries = []; let p = 0;
+    const dec = new TextDecoder();
+    for (let i = 0; i < count && p + 46 <= cd.length; i++) {
+      if (u32(cd, p) !== 0x02014b50) break;
+      const method = u16(cd, p + 10), compSize = u32(cd, p + 20), size = u32(cd, p + 24);
+      const nl = u16(cd, p + 28), xl = u16(cd, p + 30), cl = u16(cd, p + 32), lho = u32(cd, p + 42);
+      entries.push({ name: dec.decode(cd.subarray(p + 46, p + 46 + nl)), method, compSize, size, lho });
+      p += 46 + nl + xl + cl;
+    }
+    return entries;
+  }
+
+  async function extractEntry(file, e) {
+    const lh = await readSlice(file, e.lho, e.lho + 30);
+    if (u32(lh, 0) !== 0x04034b50) throw new Error('cabecera ZIP inválida');
+    const start = e.lho + 30 + u16(lh, 26) + u16(lh, 28);
+    const raw = file.slice(start, start + e.compSize);
+    if (e.method === 0) return new Uint8Array(await raw.arrayBuffer());
+    if (e.method !== 8) throw new Error('compresión no soportada');
+    const ds = raw.stream().pipeThrough(new DecompressionStream('deflate-raw'));
+    return new Uint8Array(await new Response(ds).arrayBuffer());
+  }
+
+  function classifyZip(entries) {
+    const names = entries.map(e => e.name);
+    const hasManifest = names.includes('AndroidManifest.xml');
+    const hasDex = names.some(n => /^classes\d*\.dex$/.test(n));
+    const nested = names.filter(n => ['apk', 'dex', 'exe', 'scr', 'bat', 'cmd', 'vbs', 'js', 'jar', 'msi', 'ps1', 'hta'].includes(extOf(n.split('/').pop()))).slice(0, 20);
+    let type = 'ZIP';
+    if (hasManifest && hasDex) type = 'APK';
+    else if (names.includes('[Content_Types].xml')) type = 'OOXML';
+    else if (names.some(n => n.toUpperCase() === 'META-INF/MANIFEST.MF') && names.some(n => n.endsWith('.class'))) type = 'JAR';
+    return { type, macros: names.some(n => n.toLowerCase().endsWith('vbaproject.bin')), nested, count: names.length };
+  }
+
+  // ------------------------------------------------------------ AndroidManifest binario (AXML)
+  const ATTR = { 0x01010003: 'name', 0x01010006: 'permission', 0x01010001: 'label', 0x0101021c: 'versionName' };
+
+  function parseAXML(b) {
+    if (u16(b, 0) !== 0x0003) throw new Error('manifiesto no binario');
+    let strings = [], resMap = [];
+    const out = { package: null, versionName: null, label: null, permissions: [], services: [], receivers: [] };
+    let p = u16(b, 2);
+    const readStr = (pool, idx) => (idx === 0xFFFFFFFF || idx >= pool.length ? null : pool[idx]);
+    while (p + 8 <= b.length) {
+      const type = u16(b, p), hsize = u16(b, p + 2), size = u32(b, p + 4);
+      if (size < 8 || p + size > b.length) break;
+      if (type === 0x0001) {
+        const count = u32(b, p + 8), flags = u32(b, p + 16), sStart = u32(b, p + 20);
+        const utf8 = (flags & 0x100) !== 0;
+        const offs = p + hsize;
+        strings = new Array(count);
+        for (let i = 0; i < count; i++) {
+          let s = p + sStart + u32(b, offs + i * 4);
+          try {
+            if (utf8) {
+              let l = b[s]; s += (l & 0x80) ? 2 : 1;
+              let bl = b[s]; if (bl & 0x80) { bl = ((bl & 0x7F) << 8) | b[s + 1]; s += 2; } else s += 1;
+              strings[i] = new TextDecoder().decode(b.subarray(s, s + bl));
+            } else {
+              let l = u16(b, s); s += 2;
+              if (l & 0x8000) { l = ((l & 0x7FFF) << 16) | u16(b, s); s += 2; }
+              let str = ''; for (let j = 0; j < l; j++) str += String.fromCharCode(u16(b, s + j * 2));
+              strings[i] = str;
+            }
+          } catch (_) { strings[i] = ''; }
+        }
+      } else if (type === 0x0180) {
+        const n = (size - hsize) / 4; resMap = [];
+        for (let i = 0; i < n; i++) resMap.push(u32(b, p + hsize + i * 4));
+      } else if (type === 0x0102) {
+        const tag = readStr(strings, u32(b, p + 20));
+        const aStart = u16(b, p + 24), aSize = u16(b, p + 26), aCount = u16(b, p + 28);
+        const attrs = {};
+        for (let i = 0; i < aCount; i++) {
+          const a = p + 16 + aStart + i * aSize;
+          const nameIdx = u32(b, a + 4), raw = u32(b, a + 8), dtype = b[a + 15], data = u32(b, a + 16);
+          const name = ATTR[resMap[nameIdx]] || readStr(strings, nameIdx) || '';
+          let value = readStr(strings, raw);
+          if (value == null) value = dtype === 0x03 ? readStr(strings, data) : (dtype === 0x01 ? '@0x' + data.toString(16) : String(data));
+          attrs[name] = value;
+        }
+        if (tag === 'manifest') { out.package = attrs.package || null; out.versionName = attrs.versionName || null; }
+        else if (tag === 'uses-permission' || tag === 'uses-permission-sdk-23') { if (attrs.name) out.permissions.push(attrs.name); }
+        else if (tag === 'application') { if (attrs.label && !attrs.label.startsWith('@')) out.label = attrs.label; }
+        else if (tag === 'service') out.services.push({ name: attrs.name, permission: attrs.permission || null });
+        else if (tag === 'receiver') out.receivers.push({ name: attrs.name, permission: attrs.permission || null });
+      }
+      p += size;
+    }
+    return out;
+  }
+
+  // ------------------------------------------------------------ conocimiento de apps
+  const P = 'android.permission.';
+  const PERMS = {
+    READ_SMS: ['Leer SMS', 'SMS'], RECEIVE_SMS: ['Recibir SMS', 'SMS'], SEND_SMS: ['Enviar SMS', 'SMS'], RECEIVE_MMS: ['Recibir MMS', 'SMS'],
+    RECEIVE_WAP_PUSH: ['Recibir WAP Push', 'SMS'], READ_CALL_LOG: ['Leer registro de llamadas', 'Llamadas'], WRITE_CALL_LOG: ['Modificar registro de llamadas', 'Llamadas'],
+    PROCESS_OUTGOING_CALLS: ['Controlar llamadas salientes', 'Llamadas'], CALL_PHONE: ['Hacer llamadas', 'Llamadas'], ANSWER_PHONE_CALLS: ['Atender llamadas', 'Llamadas'],
+    READ_PHONE_STATE: ['Estado del teléfono', 'Teléfono'], READ_PHONE_NUMBERS: ['Leer números', 'Teléfono'], READ_CONTACTS: ['Leer contactos', 'Contactos'],
+    WRITE_CONTACTS: ['Modificar contactos', 'Contactos'], GET_ACCOUNTS: ['Ver cuentas', 'Contactos'], RECORD_AUDIO: ['Micrófono', 'Micrófono'], CAMERA: ['Cámara', 'Cámara'],
+    ACCESS_FINE_LOCATION: ['Ubicación precisa', 'Ubicación'], ACCESS_COARSE_LOCATION: ['Ubicación aproximada', 'Ubicación'],
+    ACCESS_BACKGROUND_LOCATION: ['Ubicación en segundo plano', 'Ubicación'], BODY_SENSORS: ['Sensores corporales', 'Sensores'],
+    READ_CALENDAR: ['Leer calendario', 'Calendario'], WRITE_CALENDAR: ['Modificar calendario', 'Calendario'],
+    READ_EXTERNAL_STORAGE: ['Leer almacenamiento', 'Archivos'], WRITE_EXTERNAL_STORAGE: ['Escribir almacenamiento', 'Archivos'],
+    MANAGE_EXTERNAL_STORAGE: ['Acceso a todos los archivos', 'Archivos'], READ_MEDIA_IMAGES: ['Leer fotos', 'Archivos'], READ_MEDIA_VIDEO: ['Leer videos', 'Archivos'],
+    SYSTEM_ALERT_WINDOW: ['Mostrar sobre otras apps', 'Superposición'], REQUEST_INSTALL_PACKAGES: ['Instalar apps', 'Instalación'],
+    PACKAGE_USAGE_STATS: ['Estadísticas de uso', 'Apps'], WRITE_SETTINGS: ['Modificar ajustes del sistema', 'Sistema'], DISABLE_KEYGUARD: ['Desactivar bloqueo', 'Sistema']
+  };
+  const permLabel = p => (p.startsWith(P) && PERMS[p.slice(P.length)] ? PERMS[p.slice(P.length)][0] : p.split('.').pop());
+  const isSensitive = p => p.startsWith(P) && !!PERMS[p.slice(P.length)];
+  const SMS = ['READ_SMS', 'RECEIVE_SMS', 'SEND_SMS', 'RECEIVE_MMS', 'RECEIVE_WAP_PUSH'].map(x => P + x);
+  const CALLS = ['READ_CALL_LOG', 'WRITE_CALL_LOG', 'PROCESS_OUTGOING_CALLS', 'CALL_PHONE', 'ANSWER_PHONE_CALLS'].map(x => P + x);
+  const CONTACTS = ['READ_CONTACTS', 'WRITE_CONTACTS', 'GET_ACCOUNTS'].map(x => P + x);
+
+  const BRANDS = [
+    ['WhatsApp', ['com.whatsapp', 'com.whatsapp.w4b']], ['WhatsApp Business', ['com.whatsapp.w4b']],
+    ['Google Play Store', ['com.android.vending']], ['Play Store', ['com.android.vending']],
+    ['Google Play services', ['com.google.android.gms']], ['Servicios de Google Play', ['com.google.android.gms']],
+    ['Chrome', ['com.android.chrome', 'com.chrome.beta', 'com.chrome.dev', 'com.chrome.canary']],
+    ['Google Chrome', ['com.android.chrome', 'com.chrome.beta', 'com.chrome.dev', 'com.chrome.canary']],
+    ['Facebook', ['com.facebook.katana', 'com.facebook.lite']], ['Instagram', ['com.instagram.android', 'com.instagram.lite']],
+    ['Messenger', ['com.facebook.orca', 'com.facebook.mlite']],
+    ['Telegram', ['org.telegram.messenger', 'org.telegram.messenger.web', 'org.thunderdog.challegram']],
+    ['YouTube', ['com.google.android.youtube']], ['Gmail', ['com.google.android.gm']], ['Netflix', ['com.netflix.mediaclient']],
+    ['Spotify', ['com.spotify.music', 'com.spotify.lite']], ['TikTok', ['com.zhiliaoapp.musically', 'com.ss.android.ugc.trill']],
+    ['Mercado Pago', ['com.mercadopago.wallet']], ['Mercado Libre', ['com.mercadolibre']], ['Signal', ['org.thoughtcrime.securesms']],
+    ['Snapchat', ['com.snapchat.android']], ['PayPal', ['com.paypal.android.p2pmobile']], ['Discord', ['com.discord']],
+    ['Zoom', ['us.zoom.videomeetings']], ['Outlook', ['com.microsoft.office.outlook']]
+  ];
+  const AFFIXES = new Set(['update', 'updater', 'actualizacion', 'actualizar', 'plus', 'gold', 'mod', 'premium', 'pro', 'security',
+    'seguridad', 'verificacion', 'verify', 'gb', 'fm', 'yo', 'og', 'fouad', 'aero', 'hack', 'free', 'gratis']);
+  const HOMO = { 'а': 'a', 'е': 'e', 'о': 'o', 'р': 'p', 'с': 'c', 'у': 'y', 'х': 'x', 'і': 'i', 'ѕ': 's', 'α': 'a', 'ο': 'o', 'ρ': 'p', 'ν': 'v', 'τ': 't',
+    '0': 'o', '1': 'l', '3': 'e', '5': 's', '@': 'a', '$': 's' };
+  function normalize(s) {
+    let out = '';
+    for (const ch of s.toLowerCase().normalize('NFD').replace(/\p{M}+/gu, '')) {
+      const m = HOMO[ch] || ch;
+      if (/[\p{L}\p{N}]/u.test(m)) out += m;
+    }
+    return out.replace(/rn/g, 'm').replace(/vv/g, 'w');
+  }
+  function lev(a, b) {
+    if (a === b) return 0; if (Math.abs(a.length - b.length) > 2) return 99;
+    let prev = Array.from({ length: b.length + 1 }, (_, i) => i), cur = new Array(b.length + 1);
+    for (let i = 1; i <= a.length; i++) {
+      cur[0] = i;
+      for (let j = 1; j <= b.length; j++) cur[j] = Math.min(cur[j - 1] + 1, prev[j] + 1, prev[j - 1] + (a[i - 1] === b[j - 1] ? 0 : 1));
+      [prev, cur] = [cur, prev];
+    }
+    return prev[b.length];
+  }
+  function detectImitation(label, pkg) {
+    const n = normalize(label || '');
+    if (n.length >= 3) {
+      for (const [brand, off] of BRANDS) {
+        if (off.includes(pkg)) continue;
+        const bn = normalize(brand);
+        if (n === bn) return `Usa el mismo nombre que "${brand}" pero su paquete (${pkg}) no es el oficial.`;
+        if (bn.length >= 6 && lev(n, bn) === 1) return `Su nombre "${label}" es casi idéntico a "${brand}" y no es la app oficial.`;
+        if (n.includes(bn) && n !== bn && AFFIXES.has(n.replace(bn, ''))) return `Su nombre combina "${brand}" con "${n.replace(bn, '')}", patrón típico de copias o versiones modificadas.`;
+      }
+    }
+    for (const [brand, off] of BRANDS) {
+      for (const o of off) if (pkg && pkg !== o && pkg.startsWith(o + '.') && !off.includes(pkg))
+        return `Su paquete (${pkg}) se hace pasar por una variante del paquete oficial de ${brand} (${o}).`;
+    }
+    return null;
+  }
+
+  /** Reglas para un APK NO instalado (lo que pediría al instalarse). */
+  function evaluateApk(m, signature) {
+    let level = 'SAFE'; const reasons = [];
+    const add = (l, t) => { level = maxLevel(level, l); reasons.push(`[${LABEL[l]}] ${t}`); };
+    if (signature) add('CRITICAL', `El SHA-256 coincide con una firma conocida: ${signature.name} (fuente: ${signature.source}).`);
+    const perms = new Set(m.permissions);
+    const has = list => list.some(x => perms.has(x));
+    const a11y = m.services.some(s => s.permission === P + 'BIND_ACCESSIBILITY_SERVICE');
+    const admin = m.receivers.some(r => r.permission === P + 'BIND_DEVICE_ADMIN');
+    const listener = m.services.some(s => s.permission === P + 'BIND_NOTIFICATION_LISTENER_SERVICE');
+    const sens = m.permissions.filter(isSensitive).length;
+    if (a11y) add('MEDIUM', 'Incluye un servicio de accesibilidad: si lo activás, puede leer la pantalla y tocar por vos.');
+    if (admin) add('LOW', 'Puede pedir permisos de administración del dispositivo.');
+    if (listener) add('LOW', 'Puede pedir acceso a todas tus notificaciones.');
+    if (has(SMS)) add('HIGH', 'Solicita acceso a SMS: puede leer o interceptar códigos de verificación.');
+    if (a11y && (perms.has(P + 'SYSTEM_ALERT_WINDOW') || has(SMS) || perms.has(P + 'REQUEST_INSTALL_PACKAGES')))
+      add('HIGH', 'Combina accesibilidad con superposición de pantalla, SMS o instalación de apps: patrón usado por troyanos bancarios.');
+    const imit = detectImitation(m.label || '', m.package || '');
+    if (imit) add('HIGH', imit);
+    if (m.package && (m.package.startsWith('com.android.') || m.package.startsWith('com.google.android.')))
+      add('MEDIUM', `Su paquete (${m.package}) imita al de un componente del sistema y viene como APK suelto.`);
+    if (perms.has(P + 'REQUEST_INSTALL_PACKAGES')) add('LOW', 'Puede pedir instalar otras aplicaciones.');
+    if (sens >= 5) add('MEDIUM', `Instalador APK suelto que solicita ${sens} permisos sensibles.`);
+    else add('LOW', 'Instalador APK fuera de una tienda: instalalo sólo si conocés y confiás en el origen.');
+    return { level, reasons, a11y, admin, sensitive: m.permissions.filter(isSensitive) };
+  }
+
+  // ------------------------------------------------------------ reglas de archivos
+  const MEDIA_FOLDERS = new Set(['dcim', 'pictures', 'music', 'movies', 'ringtones', 'alarms', 'notifications', 'podcasts', 'audiobooks', 'recordings']);
+  const BIDI = /[‪-‮⁦-⁩‎‏]/;
+  const INVISIBLE = /[​-‍﻿­\u0000-\u001F\u007F]/;
+  const CYR_GREEK = /[Ͱ-ϿЀ-ӿ]/;
+
+  function evaluateFile(c) {
+    let level = 'SAFE', title = 'Sin indicadores de amenaza';
+    const reasons = [];
+    const add = (l, t, text) => { if (W[l] > W[level]) { level = l; title = t; } reasons.push(`[${LABEL[l]}] ${text}`); };
+    const ext = extOf(c.name);
+    const segs = c.path.split('/').filter(Boolean);
+    const parents = segs.slice(0, -1);
+    const inHiddenFolder = parents.slice(1).some(s => s.startsWith('.')) || (parents.length === 1 && parents[0].startsWith('.'));
+    const isHidden = c.name.startsWith('.');
+    const real = c.realType, rt = T[real];
+
+    if (c.signature) add('CRITICAL', 'Amenaza confirmada', `El SHA-256 coincide con una firma conocida: ${c.signature.name} (fuente: ${c.signature.source}).`);
+    if (c.eicar && !c.signature) add('CRITICAL', 'Archivo de prueba EICAR', 'Contiene la cadena de prueba EICAR. Es inofensivo: se usa para comprobar que un antivirus funciona.');
+
+    const expected = EXPECTED[ext];
+    if (rt.exec) {
+      if (DOC_MEDIA_EXT.has(ext)) add('HIGH', 'Extensión engañosa', `Se presenta como .${ext} pero en realidad es ${rt.label}.`);
+      else if (ext && !EXEC_EXT.has(ext) && !(expected && expected.includes(real))) add('MEDIUM', 'Ejecutable con extensión inusual', `Es ${rt.label} pero tiene extensión .${ext}.`);
+      else if (!ext) add('MEDIUM', 'Ejecutable sin extensión', `Es ${rt.label} y no tiene extensión visible.`);
+    } else if (expected && real !== 'UNKNOWN' && real !== 'EMPTY' && !expected.includes(real) && rt.archive && DOC_MEDIA_EXT.has(ext)) {
+      add('LOW', 'Contenido no coincide', `Tiene extensión .${ext} pero contiene ${rt.label}.`);
+    }
+
+    const parts = c.name.split('.').map(s => s.trim().toLowerCase());
+    if (parts.length >= 3) {
+      const last = parts[parts.length - 1], prev = parts[parts.length - 2];
+      if (EXEC_EXT.has(last) && DOC_MEDIA_EXT.has(prev)) add('HIGH', 'Doble extensión', `Doble extensión ".${prev}.${last}": aparenta ser un documento pero es un ejecutable/instalador.`);
+    }
+    if (/\s{5,}\.[A-Za-z0-9]{2,5}$/.test(c.name)) add('MEDIUM', 'Extensión escondida con espacios', 'Usa muchos espacios antes de la extensión real para ocultarla.');
+    if (BIDI.test(c.name)) add(rt.exec || EXEC_EXT.has(extOf(c.name.replace(new RegExp(BIDI.source, 'g'), ''))) ? 'HIGH' : 'MEDIUM',
+      'Nombre con inversión de texto', 'Contiene caracteres de control de dirección (RLO), usados para invertir y disfrazar la extensión.');
+    if (INVISIBLE.test(c.name)) add('LOW', 'Nombre con caracteres invisibles', 'El nombre contiene caracteres invisibles o de control.');
+    if (CYR_GREEK.test(c.name) && /[A-Za-z]/.test(c.name)) add('LOW', 'Nombre con letras que imitan otras', 'Mezcla letras latinas con cirílicas/griegas que se ven iguales (posible imitación).');
+    if (c.name.length > 150) add('LOW', 'Nombre muy largo', `El nombre tiene ${c.name.length} caracteres.`);
+
+    if (rt.exec) {
+      if (isHidden || inHiddenFolder) add('HIGH', 'Ejecutable oculto', `Es ${rt.label} y está ${isHidden ? 'oculto' : 'dentro de una carpeta oculta'}.`);
+      const media = parents.find(s => MEDIA_FOLDERS.has(s.toLowerCase()));
+      if (media) add('MEDIUM', 'Ejecutable en ubicación inusual', `Es ${rt.label} y está en la carpeta "${media}", que normalmente sólo contiene fotos, música o videos.`);
+    }
+
+    const pt = c.patterns || new Set();
+    if (real === 'PDF') {
+      if (pt.has('pdf_launch')) add('MEDIUM', 'PDF con acción de ejecución', 'El PDF contiene una acción /Launch, que puede intentar abrir programas.');
+      if (pt.has('pdf_js')) add('MEDIUM', 'PDF con JavaScript', 'El PDF contiene código JavaScript.');
+      if (pt.has('pdf_embedded')) add('LOW', 'PDF con archivos adjuntos', 'El PDF tiene archivos incrustados.');
+    } else if (real === 'OLE2') {
+      if (pt.has('ole_vba') || pt.has('ole_macros')) add('MEDIUM', 'Documento con macros', 'El documento de Office contiene macros (VBA). Abrilo sólo si confiás en el remitente.');
+    } else if (real === 'OOXML') {
+      if (c.zip && c.zip.macros) add('MEDIUM', 'Documento con macros', 'El documento de Office contiene macros (vbaProject.bin).');
+    } else if (real === 'PE') add('LOW', 'Ejecutable de Windows', 'Es un programa de Windows: no funciona en Android, pero podría infectar una PC si lo copiás.');
+    else if (real === 'ELF') add('MEDIUM', 'Binario nativo', 'Es un binario ejecutable nativo fuera de una app instalada, algo poco habitual.');
+    else if (real === 'DEX') add('MEDIUM', 'Código Android suelto', 'Es código ejecutable de Android (DEX) fuera de una app instalada.');
+    else if (real === 'SCRIPT') add('LOW', 'Script', 'Es un script ejecutable (#!). Revisá su origen antes de ejecutarlo.');
+    if (c.zip && c.zip.nested.length && real !== 'APK')
+      add('LOW', 'Comprimido con ejecutables', `Contiene ejecutables o instaladores: ${c.zip.nested.slice(0, 5).join(', ')}${c.zip.nested.length > 5 ? '…' : ''}.`);
+
+    if (c.apk) {
+      reasons.push(`Paquete: ${c.apk.manifest.package || 'desconocido'}${c.apk.manifest.versionName ? ' (versión ' + c.apk.manifest.versionName + ')' : ''}`);
+      if (c.apk.verdict.sensitive.length) reasons.push('Permisos sensibles solicitados: ' + c.apk.verdict.sensitive.map(permLabel).join(', '));
+      for (const r of c.apk.verdict.reasons) reasons.push(r);
+      if (W[c.apk.verdict.level] > W[level]) { level = c.apk.verdict.level; title = level === 'CRITICAL' ? 'Amenaza confirmada' : 'APK sospechoso'; }
+    } else if (real === 'APK') add('LOW', 'Instalador APK', 'Instalador APK fuera de una tienda (no se pudo leer su manifiesto). Instalalo sólo si conocés el origen.');
+
+    if (c.readError) reasons.push('No se pudo leer el contenido completo: ' + c.readError);
+    if (c.hashSkipped) reasons.push('SHA-256 no calculado: el archivo supera el límite configurado.');
+    if (c.trusted && level !== 'CRITICAL' && level !== 'SAFE') {
+      reasons.push('Marcado como confiable por vos: no cuenta para el nivel de riesgo.');
+      level = 'SAFE'; title = 'Marcado como confiable';
+    }
+    if (level === 'SAFE' && isHidden) title = 'Archivo oculto';
+    return { level, title, reasons, isHidden };
+  }
+
+  /** Analiza un archivo completo. ctx: { path, hashLimit, lookupSig(hash), isTrusted(hash), isCancelled() } */
+  async function analyzeFile(file, ctx) {
+    let content = null, readError = null;
+    try { content = await readContent(file, ctx.hashLimit, ctx.isCancelled); }
+    catch (e) { if (e.message === 'cancelado') throw e; readError = e.message || String(e); }
+    let realType = content ? content.type : 'UNKNOWN';
+    let zip = null, apk = null;
+    if (realType === 'ZIP') {
+      try {
+        const entries = await zipEntries(file);
+        if (entries) {
+          zip = classifyZip(entries); realType = zip.type;
+          if (realType === 'APK') {
+            const me = entries.find(e => e.name === 'AndroidManifest.xml');
+            try {
+              const manifest = parseAXML(await extractEntry(file, me));
+              const sig = content && content.sha256 ? await ctx.lookupSig(content.sha256) : null;
+              apk = { manifest, verdict: evaluateApk(manifest, sig) };
+            } catch (_) { /* manifiesto ilegible */ }
+          }
+        }
+      } catch (_) { /* zip dañado */ }
+    }
+    const sha = content ? content.sha256 : null;
+    const signature = sha ? await ctx.lookupSig(sha) : null;
+    const trusted = sha ? await ctx.isTrusted(sha) : false;
+    const v = evaluateFile({
+      name: file.name, path: ctx.path, realType, signature, eicar: content && content.eicar,
+      patterns: content && content.patterns, zip, apk, trusted, readError,
+      hashSkipped: !readError && !sha && file.size > ctx.hashLimit
+    });
+    return {
+      kind: 'FILE', level: v.level, title: v.title, reasons: v.reasons, name: file.name, path: ctx.path,
+      location: ctx.path.split('/').slice(0, -1).join('/') || '(raíz)', size: file.size,
+      modifiedAt: file.lastModified || null, sha256: sha, realType, realTypeLabel: T[realType].label,
+      isHidden: v.isHidden || ctx.path.split('/').slice(0, -1).some(s => s.startsWith('.')),
+      packageName: apk ? apk.manifest.package : null
+    };
+  }
+
+  function overallText(level) {
+    return {
+      CRITICAL: 'En riesgo: hay amenazas confirmadas', HIGH: 'Atención: hay elementos muy sospechosos',
+      MEDIUM: 'Revisar: hay elementos que requieren revisión', LOW: 'Aceptable: sólo elementos poco habituales',
+      SAFE: 'Sin amenazas conocidas detectadas'
+    }[level];
+  }
+
+  return { LEVELS, LABEL, W, maxLevel, Sha256, detectType, readContent, zipEntries, extractEntry, classifyZip, parseAXML,
+    evaluateApk, evaluateFile, analyzeFile, detectImitation, normalize, extOf, T, overallText, permLabel, EICAR };
+})();
+if (typeof module !== 'undefined') module.exports = CS;
+
+</script>
+<script>
+/* =====================================================================
+   CyberSentinel Web — interfaz, almacenamiento local y flujo de análisis
+   ===================================================================== */
+(() => {
+  'use strict';
+  const SELF_HTML = '<!DOCTYPE html>\n' + document.documentElement.outerHTML;
+  const EICAR_SHA = '275a021bbfb6489e54d471899f7db9d1663fc695ec2fe2a2c4538aabf651fd0f';
+  const MEDIA_TYPES = new Set(['PNG', 'JPEG', 'GIF', 'WEBP', 'BMP', 'ISO_MEDIA', 'MP3', 'OGG', 'WAV', 'AVI', 'MATROSKA']);
+  const MEDIA_EXT = new Set(['jpg', 'jpeg', 'png', 'gif', 'webp', 'bmp', 'heic', 'heif', 'mp3', 'm4a', 'aac', 'ogg', 'opus', 'wav', 'flac', 'mp4', '3gp', 'mkv', 'webm', 'mov', 'avi']);
+
+  // ================================================================ utilidades
+  const $ = s => document.querySelector(s);
+  const esc = s => String(s == null ? '' : s).replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
+  const fmtDate = ms => (ms ? new Date(ms).toLocaleString('es-AR', { dateStyle: 'short', timeStyle: 'short' }) : 'no disponible');
+  const fmtSize = b => {
+    if (b == null) return 'no disponible';
+    if (b < 1024) return b + ' B';
+    const u = ['KB', 'MB', 'GB', 'TB']; let v = b / 1024, i = 0;
+    while (v >= 1024 && i < u.length - 1) { v /= 1024; i++; }
+    return v.toFixed(1) + ' ' + u[i];
+  };
+  const fmtDur = ms => { const s = Math.round(ms / 1000); return s < 60 ? s + ' s' : Math.floor(s / 60) + ' min ' + (s % 60) + ' s'; };
+  const pill = l => `<span class="pill L-${l} bg-${l}">${CS.LABEL[l]}</span>`;
+  function toast(msg) {
+    const t = document.createElement('div'); t.className = 'toast'; t.textContent = msg; t.setAttribute('role', 'status');
+    document.body.appendChild(t); setTimeout(() => t.remove(), 3600);
+  }
+  function modal(html, onMount) {
+    const bg = document.createElement('div'); bg.className = 'modal-bg';
+    bg.innerHTML = `<div class="modal" role="dialog" aria-modal="true">${html}</div>`;
+    const close = () => bg.remove();
+    bg.addEventListener('click', e => { if (e.target === bg) close(); });
+    document.addEventListener('keydown', function k(e) { if (e.key === 'Escape') { close(); document.removeEventListener('keydown', k); } });
+    document.body.appendChild(bg);
+    if (onMount) onMount(bg.querySelector('.modal'), close);
+    return close;
+  }
+  /** Diálogo de confirmación propio (los diálogos del navegador están bloqueados en esta página). */
+  function confirmBox(title, message, okText, danger) {
+    return new Promise(resolve => {
+      modal(`<h3>${esc(title)}</h3><p class="muted">${esc(message)}</p>
+        <div class="row" style="justify-content:flex-end"><button class="btn" id="cb-no">Cancelar</button>
+        <button class="btn ${danger ? 'danger' : 'primary'}" id="cb-ok">${esc(okText)}</button></div>`, (m, close) => {
+        m.querySelector('#cb-no').onclick = () => { close(); resolve(false); };
+        m.querySelector('#cb-ok').onclick = () => { close(); resolve(true); };
+        m.querySelector('#cb-ok').focus();
+      });
+    });
+  }
+  async function copy(text) {
+    try { await navigator.clipboard.writeText(text); toast('Copiado'); }
+    catch (_) { toast('No se pudo copiar: seleccioná el texto y copialo a mano'); }
+  }
+
+  // ================================================================ almacenamiento local (IndexedDB)
+  const Store = (() => {
+    let db = null;
+    const mem = { sigs: new Map(), scans: new Map(), findings: new Map(), log: [], quarantine: new Map(), trusted: new Set() };
+    let seq = 1;
+    const open = () => new Promise(res => {
+      try {
+        const r = indexedDB.open('cybersentinel-web', 1);
+        r.onupgradeneeded = () => {
+          const d = r.result;
+          d.createObjectStore('sigs', { keyPath: 'h' });
+          d.createObjectStore('scans', { keyPath: 'id', autoIncrement: true });
+          d.createObjectStore('findings', { keyPath: 'id', autoIncrement: true }).createIndex('scan', 'scanId');
+          d.createObjectStore('log', { keyPath: 'id', autoIncrement: true });
+          d.createObjectStore('quarantine', { keyPath: 'id', autoIncrement: true });
+          d.createObjectStore('trusted', { keyPath: 'h' });
+        };
+        r.onsuccess = () => { db = r.result; res(true); };
+        r.onerror = () => res(false);
+        r.onblocked = () => res(false);
+      } catch (_) { res(false); }
+    });
+    const req = r => new Promise((res, rej) => { r.onsuccess = () => res(r.result); r.onerror = () => rej(r.error); });
+    const tx = (store, mode = 'readonly') => db.transaction(store, mode).objectStore(store);
+    return {
+      get persistent() { return !!db; },
+      open,
+      async getSig(h) { if (!db) return mem.sigs.get(h) || null; return (await req(tx('sigs').get(h))) || null; },
+      async countSigs() { if (!db) return mem.sigs.size; return req(tx('sigs').count()); },
+      async putSigs(list) { // list: [{h,name,source}]
+        if (!db) { let n = 0; for (const s of list) if (!mem.sigs.has(s.h)) { mem.sigs.set(s.h, s); n++; } return n; }
+        return new Promise((res, rej) => {
+          const t = db.transaction('sigs', 'readwrite'); const st = t.objectStore('sigs'); let added = 0;
+          for (const s of list) { const g = st.get(s.h); g.onsuccess = () => { if (!g.result) { st.put(s); added++; } }; }
+          t.oncomplete = () => res(added); t.onerror = () => rej(t.error);
+        });
+      },
+      async sigSources() {
+        const counts = new Map();
+        if (!db) { for (const s of mem.sigs.values()) counts.set(s.source, (counts.get(s.source) || 0) + 1); return [...counts]; }
+        return new Promise(res => {
+          const c = tx('sigs').openCursor();
+          c.onsuccess = () => { const cur = c.result; if (cur) { counts.set(cur.value.source, (counts.get(cur.value.source) || 0) + 1); cur.continue(); } else res([...counts]); };
+          c.onerror = () => res([...counts]);
+        });
+      },
+      async deleteSource(src) {
+        if (!db) { for (const [k, v] of mem.sigs) if (v.source === src) mem.sigs.delete(k); return; }
+        return new Promise(res => {
+          const t = db.transaction('sigs', 'readwrite'); const c = t.objectStore('sigs').openCursor();
+          c.onsuccess = () => { const cur = c.result; if (cur) { if (cur.value.source === src) cur.delete(); cur.continue(); } };
+          t.oncomplete = () => res(); t.onerror = () => res();
+        });
+      },
+      async addScan(s) { if (!db) { s.id = seq++; mem.scans.set(s.id, s); return s.id; } return req(tx('scans', 'readwrite').add(s)); },
+      async putScan(s) { if (!db) { mem.scans.set(s.id, s); return; } return req(tx('scans', 'readwrite').put(s)); },
+      async scans() { const l = db ? await req(tx('scans').getAll()) : [...mem.scans.values()]; return l.sort((a, b) => b.startedAt - a.startedAt); },
+      async scan(id) { return db ? (await req(tx('scans').get(id))) || null : mem.scans.get(id) || null; },
+      async deleteScan(id) {
+        if (!db) { mem.scans.delete(id); for (const [k, f] of mem.findings) if (f.scanId === id) mem.findings.delete(k); return; }
+        const fs = await this.findings(id);
+        const t = db.transaction(['scans', 'findings'], 'readwrite');
+        t.objectStore('scans').delete(id); for (const f of fs) t.objectStore('findings').delete(f.id);
+        return new Promise(r => { t.oncomplete = r; t.onerror = r; });
+      },
+      async addFindings(list) {
+        if (!db) { for (const f of list) { f.id = seq++; mem.findings.set(f.id, f); } return; }
+        const t = db.transaction('findings', 'readwrite'); const st = t.objectStore('findings');
+        for (const f of list) { const r = st.add(f); r.onsuccess = () => { f.id = r.result; }; }
+        return new Promise((res, rej) => { t.oncomplete = res; t.onerror = () => rej(t.error); });
+      },
+      async findings(scanId) {
+        if (!db) return [...mem.findings.values()].filter(f => f.scanId === scanId);
+        return req(tx('findings').index('scan').getAll(scanId));
+      },
+      async finding(id) { return db ? (await req(tx('findings').get(id))) || null : mem.findings.get(id) || null; },
+      async putFinding(f) { if (!db) { mem.findings.set(f.id, f); return; } return req(tx('findings', 'readwrite').put(f)); },
+      async log(action, detail) {
+        const e = { ts: Date.now(), action, detail };
+        if (!db) { mem.log.push(e); return; }
+        try { await req(tx('log', 'readwrite').add(e)); } catch (_) { }
+      },
+      async logs() { const l = db ? await req(tx('log').getAll()) : mem.log.slice(); return l.sort((a, b) => b.ts - a.ts); },
+      async isTrusted(h) { if (!db) return mem.trusted.has(h); return !!(await req(tx('trusted').get(h))); },
+      async setTrusted(h, on) {
+        if (!db) { on ? mem.trusted.add(h) : mem.trusted.delete(h); return; }
+        return req(on ? tx('trusted', 'readwrite').put({ h, at: Date.now() }) : tx('trusted', 'readwrite').delete(h));
+      },
+      async trustedList() { return db ? (await req(tx('trusted').getAll())).map(x => x.h) : [...mem.trusted]; },
+      async addQ(q) { if (!db) { q.id = seq++; mem.quarantine.set(q.id, q); return q.id; } return req(tx('quarantine', 'readwrite').add(q)); },
+      async qList() { const l = db ? await req(tx('quarantine').getAll()) : [...mem.quarantine.values()]; return l.sort((a, b) => b.at - a.at); },
+      async qGet(id) { return db ? (await req(tx('quarantine').get(id))) || null : mem.quarantine.get(id) || null; },
+      async qDelete(id) { if (!db) { mem.quarantine.delete(id); return; } return req(tx('quarantine', 'readwrite').delete(id)); },
+      async qCount() { return db ? req(tx('quarantine').count()) : mem.quarantine.size; }
+    };
+  })();
+
+  const settings = (() => {
+    let s = { hashMb: 100 };
+    try { s = Object.assign(s, JSON.parse(localStorage.getItem('cs-settings') || '{}')); } catch (_) { }
+    return {
+      get hashMb() { return s.hashMb; },
+      set hashMb(v) { s.hashMb = Math.max(5, Math.min(2048, v | 0)); try { localStorage.setItem('cs-settings', JSON.stringify(s)); } catch (_) { } }
+    };
+  })();
+
+  // ================================================================ estado
+  const state = {
+    view: 'inicio', running: false, cancel: false,
+    progress: { phase: '', current: 0, total: 0, item: '', confirmed: 0, suspicious: 0 },
+    lastResult: null, reportId: null, filesFilter: 'risky', minLevel: 'LOW',
+    handles: new Map(), // ruta -> { parent: FileSystemDirectoryHandle, name } (sólo en esta sesión)
+    downloads: null, sigCount: 0, qCount: 0
+  };
+
+  // ================================================================ recolección de archivos
+  /** Recorre una carpeta abierta con el selector moderno (permite cuarentena real). */
+  async function walkHandle(dir, prefix, out) {
+    for await (const [name, h] of dir.entries()) {
+      const path = prefix + '/' + name;
+      if (h.kind === 'directory') { out.dirs.push(path); await walkHandle(h, path, out); }
+      else {
+        try { const f = await h.getFile(); out.files.push({ file: f, path }); state.handles.set(path, { parent: dir, name }); }
+        catch (_) { out.errors++; }
+      }
+    }
+  }
+  /** Carpetas arrastradas (API de entradas del navegador). */
+  async function walkEntry(entry, prefix, out) {
+    const path = prefix ? prefix + '/' + entry.name : entry.name;
+    if (entry.isFile) {
+      await new Promise(r => entry.file(f => { out.files.push({ file: f, path }); r(); }, () => { out.errors++; r(); }));
+    } else if (entry.isDirectory) {
+      out.dirs.push(path);
+      const reader = entry.createReader();
+      let batch;
+      do {
+        batch = await new Promise(r => reader.readEntries(r, () => r([])));
+        for (const e of batch) await walkEntry(e, path, out);
+      } while (batch.length);
+    }
+  }
+  function fromFileList(list) {
+    const out = { files: [], dirs: new Set(), errors: 0 };
+    for (const f of list) {
+      const path = f.webkitRelativePath || f.name;
+      out.files.push({ file: f, path });
+      const parts = path.split('/'); for (let i = 1; i < parts.length; i++) out.dirs.add(parts.slice(0, i).join('/'));
+    }
+    return { files: out.files, dirs: [...out.dirs], errors: 0 };
+  }
+
+  async function pickFolder() {
+    if (window.showDirectoryPicker) {
+      try {
+        const dir = await window.showDirectoryPicker({ mode: 'readwrite' });
+        const out = { files: [], dirs: [], errors: 0 };
+        state.handles.clear();
+        setProgress({ phase: 'Listando archivos…', current: 0, total: 0, item: dir.name });
+        await walkHandle(dir, dir.name, out);
+        out.source = dir.name; out.withHandles = true;
+        return out;
+      } catch (e) {
+        if (e && e.name === 'AbortError') return null;
+        // El selector moderno no está permitido en este marco: se usa el clásico.
+      }
+    }
+    return new Promise(res => {
+      const inp = $('#in-folder');
+      inp.value = '';
+      inp.onchange = () => { const r = inp.files.length ? fromFileList(inp.files) : null; if (r) r.source = (inp.files[0].webkitRelativePath || '').split('/')[0] || 'carpeta'; res(r); };
+      inp.click();
+    });
+  }
+  function pickFiles() {
+    return new Promise(res => {
+      const inp = $('#in-files');
+      inp.value = '';
+      inp.onchange = () => { const r = inp.files.length ? fromFileList(inp.files) : null; if (r) r.source = inp.files.length + ' archivo(s) elegidos'; res(r); };
+      inp.click();
+    });
+  }
+
+  // ================================================================ análisis
+  function setProgress(p) { Object.assign(state.progress, p); renderProgressOnly(); }
+
+  async function runScan(input, mode) {
+    if (state.running || !input || !input.files.length) { if (input && !input.files.length) toast('No se encontraron archivos para analizar'); return; }
+    state.running = true; state.cancel = false; state.lastResult = null;
+    if (!input.withHandles) state.handles.clear();
+    go('analisis');
+    const started = Date.now();
+    const scan = { type: mode, startedAt: started, finishedAt: null, status: 'RUNNING', source: input.source || '', files: 0, hashed: 0,
+      hidden: 0, critical: 0, high: 0, medium: 0, low: 0, errors: input.errors || 0, level: 'SAFE', notes: [] };
+    scan.id = await Store.addScan(scan);
+    await Store.log('Análisis iniciado', `${mode === 'FULL' ? 'Completo' : 'Rápido'} (#${scan.id}) sobre ${scan.source}`);
+    const hashLimit = settings.hashMb * 1024 * 1024;
+    const findings = [];
+    const groups = new Map();
+    const files = input.files;
+    const hiddenDirs = input.dirs.filter(d => d.split('/').pop().startsWith('.'));
+    const isCancelled = () => state.cancel;
+    let last = 0;
+    try {
+      for (let i = 0; i < files.length; i++) {
+        if (state.cancel) throw new Error('cancelado');
+        const { file, path } = files[i];
+        const now = performance.now();
+        if (now - last > 100) { last = now; setProgress({ phase: 'Analizando archivos…', current: i, total: files.length, item: path }); }
+        // Rápido: imágenes, audio y video grandes se evalúan por encabezado, sin hash completo.
+        const quickSkip = mode === 'QUICK' && MEDIA_EXT.has(CS.extOf(file.name)) && file.size > 2 * 1024 * 1024;
+        const r = await CS.analyzeFile(file, {
+          path, hashLimit: quickSkip ? -1 : hashLimit, isCancelled,
+          lookupSig: h => Store.getSig(h), isTrusted: h => Store.isTrusted(h)
+        });
+        if (quickSkip && MEDIA_TYPES.has(r.realType)) r.reasons = r.reasons.filter(x => !x.startsWith('SHA-256 no calculado'));
+        scan.files++;
+        if (r.sha256) { scan.hashed++; if (!groups.has(r.sha256)) groups.set(r.sha256, []); groups.get(r.sha256).push(r); }
+        if (r.reasons.some(x => x.startsWith('No se pudo leer'))) scan.errors++;
+        if (r.level !== 'SAFE' || r.isHidden) {
+          if (r.name.startsWith('.')) { scan.hidden++; r.reasons.unshift('Archivo oculto: su nombre empieza con punto, por eso no aparece en la mayoría de los exploradores.'); }
+          r.canQuarantine = state.handles.has(path);
+          findings.push(r);
+          state.progress.confirmed = findings.filter(f => f.level === 'CRITICAL').length;
+          state.progress.suspicious = findings.filter(f => CS.W[f.level] >= 1 && CS.W[f.level] <= 3).length;
+        }
+      }
+      setProgress({ phase: 'Buscando duplicados sospechosos…', current: files.length, total: files.length, item: '' });
+      for (const [sha, members] of groups) {
+        if (members.length < 2) continue;
+        const exts = new Set(members.map(m => CS.extOf(m.name)));
+        const anyExec = members.some(m => CS.T[m.realType].exec);
+        const distinct = new Set(members.map(m => m.name.toLowerCase())).size > 1;
+        let level = null;
+        if (anyExec && distinct) level = 'MEDIUM'; else if (exts.size > 1) level = 'LOW';
+        if (!level) continue;
+        const title = anyExec ? 'Ejecutable duplicado con otro nombre' : 'Mismo contenido con distinta extensión';
+        for (const m of members) {
+          const others = members.filter(o => o !== m).slice(0, 4).map(o => o.path).join('; ');
+          const reason = `[${CS.LABEL[level]}] Mismo contenido (SHA-256 ${sha.slice(0, 12)}…) que: ${others}`;
+          let f = findings.find(x => x === m);
+          if (!f) { f = m; f.reasons = []; f.canQuarantine = state.handles.has(m.path); findings.push(f); }
+          f.reasons.push(reason);
+          if (CS.W[level] > CS.W[f.level]) { f.level = level; f.title = title; }
+        }
+      }
+      for (const d of hiddenDirs) {
+        scan.hidden++;
+        const inside = files.filter(x => x.path.startsWith(d + '/')).length;
+        findings.push({ kind: 'DIR', level: 'SAFE', title: 'Carpeta oculta', name: d.split('/').pop(), path: d,
+          location: d.split('/').slice(0, -1).join('/'), isHidden: true, isDirectory: true,
+          reasons: [`Carpeta oculta (su nombre empieza con punto) con ${inside} archivo(s) analizado(s).`] });
+      }
+      scan.status = 'COMPLETED';
+    } catch (e) {
+      if (e.message === 'cancelado') { scan.status = 'CANCELLED'; scan.notes.push('Análisis cancelado: los resultados son parciales.'); }
+      else { scan.status = 'FAILED'; scan.notes.push('Error durante el análisis: ' + (e.message || e)); }
+    }
+    for (const f of findings) { f.scanId = scan.id; f.status = 'OPEN'; f.patterns = undefined; }
+    await Store.addFindings(findings);
+    const risky = findings.filter(f => f.level !== 'SAFE');
+    scan.critical = risky.filter(f => f.level === 'CRITICAL').length;
+    scan.high = risky.filter(f => f.level === 'HIGH').length;
+    scan.medium = risky.filter(f => f.level === 'MEDIUM').length;
+    scan.low = risky.filter(f => f.level === 'LOW').length;
+    scan.level = risky.reduce((m, f) => CS.maxLevel(m, f.level), 'SAFE');
+    scan.finishedAt = Date.now();
+    if (scan.errors) scan.notes.push(`${scan.errors} elemento(s) no se pudieron leer por completo.`);
+    await Store.putScan(scan);
+    await Store.log('Análisis ' + ({ COMPLETED: 'finalizado', CANCELLED: 'cancelado', FAILED: 'con errores' }[scan.status]),
+      `#${scan.id}: ${scan.files} archivos, ${scan.critical} confirmadas, ${scan.high + scan.medium + scan.low} sospechosos, ${fmtDur(scan.finishedAt - started)}`);
+    state.running = false;
+    state.lastResult = { id: scan.id, text: scan.status === 'COMPLETED' ? `Análisis terminado en ${fmtDur(scan.finishedAt - started)}` : (scan.notes[0] || 'Análisis terminado') };
+    state.reportId = scan.id;
+    await refreshCounts();
+    go('informe');
+  }
+
+  // ================================================================ recomendaciones
+  function currentLevel(findings) {
+    return findings.filter(f => f.status === 'OPEN' && f.level !== 'SAFE').reduce((m, f) => CS.maxLevel(m, f.level), 'SAFE');
+  }
+  function recommendations(scan, findings, sigCount) {
+    const out = [];
+    const open = findings.filter(f => f.status === 'OPEN');
+    const crit = open.filter(f => f.level === 'CRITICAL');
+    const high = open.filter(f => f.level === 'HIGH');
+    if (crit.length) out.push(`Aislá o borrá los ${crit.length} archivo(s) con amenaza confirmada. No los abras ni los instales.`);
+    if (high.length) out.push(`Revisá los ${high.length} archivo(s) de riesgo ALTO (extensiones engañosas, APK sospechosos, ejecutables ocultos). Si no los reconocés, eliminalos.`);
+    if (open.some(f => f.realType === 'APK')) out.push('Borrá los instaladores APK que ya no necesites e instalá apps preferentemente desde tiendas oficiales.');
+    if (open.some(f => /macros/i.test(f.title))) out.push('No habilites macros en documentos de Office salvo que confíes en quien te los envió.');
+    if (open.some(f => f.realType === 'PE')) out.push('No copies a una PC los programas de Windows encontrados si no sabés de dónde salieron.');
+    if (sigCount <= 1) out.push('La base de firmas sólo tiene la firma de prueba EICAR. Importá una lista de hashes (por ejemplo, de MalwareBazaar) en Ajustes para detectar malware conocido.');
+    if (scan.status === 'CANCELLED') out.push('El análisis se canceló; repetilo completo para tener resultados totales.');
+    if (!out.length) out.push('No se encontraron problemas en los archivos analizados. Repetí el análisis cuando descargues archivos nuevos.');
+    return out;
+  }
+
+  // ================================================================ cuarentena
+  const KEY = new TextEncoder().encode('CyberSentinel-Quarantine');
+  const xor = (u8, off = 0) => { for (let i = 0; i < u8.length; i++) u8[i] ^= KEY[(off + i) % KEY.length]; return u8; };
+  const shaOf = u8 => { const h = new CS.Sha256(); h.update(u8); return h.hex(); };
+
+  async function quarantine(f) {
+    const ref = state.handles.get(f.path);
+    if (!ref) throw new Error('El navegador no permite borrar archivos elegidos con el selector clásico. Abrí la carpeta con "Elegir carpeta" en Chrome o Edge de computadora para poder aislarlos.');
+    const file = await (await ref.parent.getFileHandle(ref.name)).getFile();
+    const plain = new Uint8Array(await file.arrayBuffer());
+    const sha = shaOf(plain);
+    const stored = xor(plain.slice());
+    if (shaOf(xor(stored.slice())) !== sha) throw new Error('La copia de cuarentena no coincide con el original. No se modificó nada.');
+    const q = { name: ref.name, path: f.path, sha, size: plain.length, at: Date.now(), reason: `${CS.LABEL[f.level]}: ${f.title}`, data: stored.buffer, parent: ref.parent, findingId: f.id };
+    let id;
+    try { id = await Store.addQ(q); } catch (e) {
+      // Algunos navegadores no guardan el acceso a la carpeta: se guarda sin él (sólo se podrá eliminar).
+      q.parent = null; id = await Store.addQ(q);
+    }
+    try {
+      if (await ref.parent.queryPermission({ mode: 'readwrite' }) !== 'granted' && await ref.parent.requestPermission({ mode: 'readwrite' }) !== 'granted') throw new Error('sin permiso de escritura');
+      await ref.parent.removeEntry(ref.name);
+    } catch (e) {
+      await Store.qDelete(id);
+      throw new Error('No se pudo quitar el archivo de su carpeta (' + (e.message || e.name) + '). No se modificó nada.');
+    }
+    state.handles.delete(f.path);
+    f.status = 'QUARANTINED'; await Store.putFinding(f);
+    await Store.log('Cuarentena', `${f.path} — SHA-256 ${sha} — motivo: ${q.reason}`);
+  }
+
+  async function restore(q) {
+    if (!q.parent) throw new Error('Este navegador no conservó el acceso a la carpeta original. Podés eliminar la copia de la cuarentena.');
+    if (await q.parent.queryPermission({ mode: 'readwrite' }) !== 'granted' && await q.parent.requestPermission({ mode: 'readwrite' }) !== 'granted')
+      throw new Error('Sin permiso para escribir en la carpeta original.');
+    let name = q.name;
+    try { await q.parent.getFileHandle(name); const d = name.lastIndexOf('.'); name = d > 0 ? name.slice(0, d) + ' (restaurado)' + name.slice(d) : name + ' (restaurado)'; } catch (_) { }
+    const plain = xor(new Uint8Array(q.data.slice(0)));
+    const fh = await q.parent.getFileHandle(name, { create: true });
+    const w = await fh.createWritable(); await w.write(plain); await w.close();
+    const back = new Uint8Array(await (await fh.getFile()).arrayBuffer());
+    if (shaOf(back) !== q.sha) { await q.parent.removeEntry(name); throw new Error('Verificación fallida al restaurar. El archivo sigue en cuarentena.'); }
+    await Store.qDelete(q.id);
+    if (q.findingId) { const f = await Store.finding(q.findingId); if (f) { f.status = 'RESTORED'; await Store.putFinding(f); } }
+    await Store.log('Restaurado', `${q.path} → ${name}`);
+    return name;
+  }
+
+  async function deleteQ(q) {
+    await Store.qDelete(q.id);
+    if (q.findingId) { const f = await Store.finding(q.findingId); if (f) { f.status = 'DELETED'; await Store.putFinding(f); } }
+    await Store.log('Eliminado definitivamente', `${q.path} — SHA-256 ${q.sha}`);
+  }
+
+  // ================================================================ firmas
+  async function importSignatures(file, onProgress) {
+    const source = 'Importada: ' + file.name;
+    let read = 0, added = 0, invalid = 0;
+    const hexRe = /\b[0-9a-fA-F]{64}\b/;
+    async function consumeText(text) {
+      let shaCol = -1, sigCol = -1, typeCol = -1, batch = [];
+      const lines = text.split(/\r?\n/);
+      const split = l => l.split(',').map(x => x.trim().replace(/^"|"$/g, '').trim());
+      for (const raw of lines) {
+        const line = raw.trim(); if (!line) continue;
+        if (line.includes('sha256_hash') && shaCol < 0) {
+          const cols = split(line.replace(/^#\s*/, '')); shaCol = cols.indexOf('sha256_hash'); sigCol = cols.indexOf('signature'); typeCol = cols.indexOf('file_type_guess'); continue;
+        }
+        if (line.startsWith('#')) continue;
+        let h = null, name = `Malware conocido (${file.name})`;
+        if (shaCol >= 0) {
+          const c = split(line); const v = c[shaCol];
+          if (v && /^[0-9a-fA-F]{64}$/.test(v)) h = v;
+          const sg = c[sigCol], ty = c[typeCol];
+          const parts = [sg && sg !== 'n/a' ? sg : null, ty && ty !== 'n/a' ? `(${ty})` : null].filter(Boolean);
+          if (parts.length) name = parts.join(' ');
+        }
+        if (!h) { const m = line.match(hexRe); h = m ? m[0] : null; }
+        if (!h) { invalid++; continue; }
+        read++; batch.push({ h: h.toLowerCase(), name, source });
+        if (batch.length >= 5000) { added += await Store.putSigs(batch); batch = []; onProgress(read); }
+      }
+      if (batch.length) added += await Store.putSigs(batch);
+      onProgress(read);
+    }
+    const head = new Uint8Array(await file.slice(0, 4).arrayBuffer());
+    if (head[0] === 0x50 && head[1] === 0x4B) {
+      const entries = await CS.zipEntries(file);
+      if (!entries) throw new Error('ZIP no válido');
+      for (const e of entries) {
+        const n = e.name.toLowerCase();
+        if (n.endsWith('.txt') || n.endsWith('.csv')) await consumeText(new TextDecoder().decode(await CS.extractEntry(file, e)));
+      }
+    } else {
+      await consumeText(await file.text());
+    }
+    await Store.log('Firmas importadas', `${file.name}: ${read} hashes leídos, ${added} nuevos, ${invalid} líneas inválidas`);
+    return { read, added, invalid };
+  }
+
+  // ================================================================ exportación
+  function pdfSafe(s) {
+    return String(s).replace(/…/g, '...').replace(/[—–]/g, '-').replace(/[•·]/g, '-').replace(/→/g, '->').replace(/[“”]/g, '"').replace(/[‘’]/g, "'")
+      .replace(/[^\x09\x0A\x0D\x20-\x7E\xA0-\xFF]/g, '?');
+  }
+  async function buildPdf(scan, findings, recs) {
+    if (!window.jspdf) throw new Error('No se pudo cargar el generador de PDF');
+    const doc = new window.jspdf.jsPDF({ unit: 'pt', format: 'a4' });
+    const W = 595, M = 42; let y = M;
+    const ensure = h => { if (y + h > 800) { doc.addPage(); y = M; } };
+    const text = (s, size = 10, style = 'normal', color = [30, 30, 30], indent = 0) => {
+      doc.setFont('helvetica', style); doc.setFontSize(size); doc.setTextColor(...color);
+      for (const line of doc.splitTextToSize(pdfSafe(s), W - 2 * M - indent)) { ensure(size + 4); doc.text(line, M + indent, y + size); y += size + 4; }
+    };
+    const section = s => { y += 8; ensure(30); text(s, 13, 'bold', [3, 105, 161]); doc.setDrawColor(200, 210, 220); doc.line(M, y, W - M, y); y += 6; };
+    const lvl = currentLevel(findings);
+    text('CyberSentinel Web - Informe de seguridad', 18, 'bold', [13, 27, 42]);
+    text(`Generado: ${fmtDate(Date.now())}  |  Análisis #${scan.id} (${scan.type === 'FULL' ? 'completo' : 'rápido'})  |  Origen: ${scan.source}`, 9, 'normal', [90, 90, 90]);
+    text(`Inicio: ${fmtDate(scan.startedAt)}  |  Fin: ${fmtDate(scan.finishedAt)}  |  Estado: ${scan.status}`, 9, 'normal', [90, 90, 90]);
+    section('Resumen');
+    const rows = [
+      ['Nivel general de seguridad', `${CS.LABEL[lvl]} - ${CS.overallText(lvl)}`], ['Archivos analizados', scan.files], ['Archivos con SHA-256', scan.hashed],
+      ['Archivos y carpetas ocultos', scan.hidden], ['Amenazas confirmadas', scan.critical],
+      ['Elementos sospechosos', `${scan.high + scan.medium + scan.low} (ALTO ${scan.high}, MEDIO ${scan.medium}, BAJO ${scan.low})`],
+      ['Aplicaciones revisadas', 'No disponible en la versión web (ver nota)'], ['Elementos no legibles', scan.errors], ['Firmas en la base local', state.sigCount]
+    ];
+    for (const [k, v] of rows) text(`${k}: ${v}`, 10);
+    for (const n of scan.notes || []) text('Nota: ' + n, 9, 'italic', [120, 90, 0]);
+    section('Recomendaciones');
+    recs.forEach((r, i) => text(`${i + 1}. ${r}`, 10));
+    const block = f => {
+      ensure(40);
+      text(`[${CS.LABEL[f.level]}] ${f.isDirectory ? 'Carpeta' : 'Archivo'}: ${f.name} - ${f.title}`, 10, 'bold');
+      text(`Ubicación: ${f.location || '(raíz)'}  |  Tamaño: ${fmtSize(f.size)}  |  Tipo real: ${f.realTypeLabel || '-'}  |  Modificado: ${fmtDate(f.modifiedAt)}  |  Estado: ${statusLabel(f.status)}`, 8, 'normal', [90, 90, 90]);
+      if (f.sha256) text('SHA-256: ' + f.sha256, 7.5, 'normal', [70, 70, 70]);
+      for (const r of f.reasons.filter(x => x.startsWith('['))) text('- ' + r, 8.5, 'normal', [40, 40, 40], 10);
+      y += 4;
+    };
+    const conf = findings.filter(f => f.level === 'CRITICAL');
+    section(`Amenazas confirmadas (${conf.length})`);
+    if (!conf.length) text('Ninguna coincidencia con firmas de malware de la base local.');
+    conf.forEach(block);
+    const sus = findings.filter(f => CS.W[f.level] >= 1 && CS.W[f.level] <= 3);
+    section(`Elementos sospechosos (${sus.length})`);
+    if (!sus.length) text('Ninguno.');
+    sus.forEach(block);
+    const hid = findings.filter(f => f.isHidden);
+    section(`Archivos y carpetas ocultos (${hid.length})`);
+    if (!hid.length) text('No se encontraron elementos ocultos.');
+    hid.slice(0, 300).forEach(f => text(`${f.isDirectory ? '[carpeta]' : '[archivo]'} ${f.path} - ${fmtSize(f.size)} - mod. ${fmtDate(f.modifiedAt)} - ${CS.LABEL[f.level]}`, 8.5));
+    section('Metodología y alcance');
+    text('CRÍTICO se asigna sólo cuando el SHA-256 de un archivo coincide exactamente con una firma de la base local (o es el archivo de prueba EICAR). ALTO, MEDIO y BAJO surgen de reglas verificables: tipo real por firma de bytes, extensiones engañosas, ubicación, contenido de PDF/Office y permisos declarados en el manifiesto de los APK. Un nombre extraño por sí solo nunca se considera virus. Todo el análisis se hizo en el navegador, sin subir archivos a ningún servidor.', 9);
+    text('Nota: una página web no puede ver las aplicaciones instaladas ni la configuración del teléfono; para eso se necesita la app Android de CyberSentinel.', 9, 'italic');
+    const pages = doc.getNumberOfPages();
+    for (let i = 1; i <= pages; i++) { doc.setPage(i); doc.setFontSize(8); doc.setTextColor(120); doc.text(`CyberSentinel Web - página ${i} de ${pages}`, M, 822); }
+    return doc.output('arraybuffer');
+  }
+  async function save(filename, data) {
+    if (state.downloads) {
+      try { await state.downloads.save({ filename, data }); return true; }
+      catch (e) { if (e && e.code !== 'declined') toast('No se pudo guardar: ' + (e.message || e.code)); return false; }
+    }
+    // Sitio publicado de forma independiente (por ejemplo, en Vercel): descarga normal del navegador.
+    try {
+      const url = URL.createObjectURL(new Blob([data]));
+      const a = document.createElement('a'); a.href = url; a.download = filename;
+      document.body.appendChild(a); a.click(); a.remove();
+      setTimeout(() => URL.revokeObjectURL(url), 4000);
+      return true;
+    } catch (e) { toast('No se pudo guardar: ' + (e.message || e)); return false; }
+  }
+
+  // ================================================================ vistas
+  const VIEWS = ['inicio', 'archivos', 'apk', 'historial', 'informe', 'cuarentena', 'ajustes', 'registro', 'analisis'];
+  function go(v) { if (location.hash !== '#' + v) location.hash = v; else render(); }
+  window.addEventListener('hashchange', render);
+  const statusLabel = s => ({ OPEN: 'Pendiente', QUARANTINED: 'En cuarentena', IGNORED: 'Marcado como confiable', RESTORED: 'Restaurado', DELETED: 'Eliminado' }[s] || s);
+
+  async function refreshCounts() {
+    try { state.sigCount = await Store.countSigs(); state.qCount = await Store.qCount(); } catch (_) { }
+    const q = $('#nav-q'); if (q) q.textContent = state.qCount;
+  }
+
+  function ringSvg(color, spinning, frac) {
+    const r = 88, c = 2 * Math.PI * r;
+    const arc = frac != null ? `<circle cx="105" cy="105" r="${r}" fill="none" stroke="${color}" stroke-width="10" stroke-linecap="round" stroke-dasharray="${(c * frac).toFixed(1)} ${c.toFixed(1)}" transform="rotate(-90 105 105)"/>` : '';
+    return `<svg viewBox="0 0 210 210" aria-hidden="true">
+      <circle cx="105" cy="105" r="${r}" fill="none" stroke="${color}" stroke-opacity=".14" stroke-width="10"/>
+      ${spinning ? arc + `<g class="spinning"><circle cx="105" cy="105" r="${r}" fill="none" stroke="${color}" stroke-opacity=".55" stroke-width="5" stroke-linecap="round" stroke-dasharray="70 ${c.toFixed(1)}"/></g>`
+      : `<circle class="pulsing" cx="105" cy="105" r="${r}" fill="none" stroke="${color}" stroke-width="10"/>`}
+      <g class="spinning" style="animation-duration:9s"><circle cx="105" cy="105" r="64" fill="none" stroke="${color}" stroke-opacity=".25" stroke-width="1.5" stroke-dasharray="300 102"/></g>
+    </svg>`;
+  }
+  const levelColor = l => ({ CRITICAL: 'var(--crit)', HIGH: 'var(--high)', MEDIUM: 'var(--med)', LOW: 'var(--low)', SAFE: 'var(--green)' }[l] || 'var(--dim)');
+
+  function itemHtml(f) {
+    const meta = [f.isDirectory ? 'carpeta' : fmtSize(f.size), f.modifiedAt ? 'mod. ' + fmtDate(f.modifiedAt) : null, f.status && f.status !== 'OPEN' ? statusLabel(f.status) : null].filter(Boolean).join(' · ');
+    return `<button class="item" data-fid="${f.id}"><span class="stripe s-${f.level}"></span>
+      <span><span class="name">${esc(f.name)}</span><br><span class="sub">${esc(f.title)} · ${esc(f.location || '(raíz)')}</span><br><span class="sub">${esc(meta)}</span></span>
+      ${pill(f.level)}</button>`;
+  }
+  function bindItems(root) {
+    root.querySelectorAll('[data-fid]').forEach(b => b.onclick = () => openFinding(Number(b.dataset.fid)));
+  }
+
+  async function render() {
+    const v = (location.hash || '#inicio').slice(1);
+    state.view = VIEWS.includes(v) ? v : 'inicio';
+    document.querySelectorAll('nav.rail a').forEach(a => a.classList.toggle('on', a.getAttribute('href') === '#' + state.view));
+    const main = $('#main');
+    const fn = { inicio: vInicio, archivos: vArchivos, apk: vApk, historial: vHistorial, informe: vInforme, cuarentena: vCuarentena, ajustes: vAjustes, registro: vRegistro, analisis: vAnalisis }[state.view];
+    try { await fn(main); } catch (e) { main.innerHTML = `<div class="banner">Error al mostrar esta sección: ${esc(e.message || e)}</div>`; }
+  }
+
+  function renderProgressOnly() {
+    const p = state.progress, frac = p.total ? p.current / p.total : null;
+    if (state.view !== 'analisis') {
+      const r = $('#home-ring');
+      if (r && state.running) {
+        r.innerHTML = ringSvg('var(--blue)', true, frac) + `<div class="center"><div class="lvl" style="color:var(--blue)">${frac != null ? Math.floor(frac * 100) + '%' : '…'}</div><div class="txt">${esc(p.phase)}</div></div>`;
+      }
+      return;
+    }
+    const set = (id, v) => { const el = document.getElementById(id); if (el) el.textContent = v; };
+    set('p-phase', p.phase); set('p-item', p.item);
+    set('p-pct', frac != null ? Math.floor(frac * 100) + '%' : '…'); set('p-count', p.total ? `${p.current} / ${p.total}` : '');
+    set('p-conf', p.confirmed); set('p-sus', p.suspicious);
+    const bar = document.getElementById('p-bar');
+    if (bar) { bar.parentElement.classList.toggle('indet', frac == null); bar.style.width = frac != null ? (frac * 100).toFixed(1) + '%' : ''; }
+    const ring = document.getElementById('p-ring'); if (ring) ring.innerHTML = ringSvg('var(--blue)', true, frac);
+  }
+
+  async function latestScan() { return (await Store.scans()).find(s => s.status !== 'RUNNING') || null; }
+
+  async function startFlow(kind, mode) {
+    if (state.running) { go('analisis'); return; }
+    const input = kind === 'folder' ? await pickFolder() : await pickFiles();
+    if (input) runScan(input, mode);
+  }
+
+  // ---------------------------------------------------------------- Inicio
+  async function vInicio(main) {
+    const s = await latestScan();
+    const fs = s ? await Store.findings(s.id) : [];
+    const lvl = s ? currentLevel(fs) : null;
+    const open = fs.filter(f => f.status === 'OPEN');
+    const color = state.running ? 'var(--blue)' : lvl ? levelColor(lvl) : 'var(--dim)';
+    main.innerHTML = `
+      <h1>Panel de seguridad</h1>
+      <p class="lead">Analizá carpetas y archivos de tu teléfono o computadora. Todo se procesa en este navegador: ningún archivo sale de tu dispositivo.</p>
+      ${Store.persistent ? '' : '<div class="banner" style="margin-bottom:14px">Este navegador no permite guardar datos en esta página: el historial, las firmas importadas y la cuarentena se pierden al cerrarla.</div>'}
+      <div class="card hero">
+        <div class="ring" id="home-ring">${ringSvg(color, state.running, state.running && state.progress.total ? state.progress.current / state.progress.total : null)}
+          <div class="center">${state.running ? `<div class="lvl" style="color:var(--blue)">${state.progress.total ? Math.floor(100 * state.progress.current / state.progress.total) + '%' : '…'}</div><div class="txt">${esc(state.progress.phase)}</div>`
+        : `<div class="lvl" style="color:${color}">${lvl ? CS.LABEL[lvl] : 'SIN DATOS'}</div><div class="txt">${lvl ? CS.overallText(lvl) : 'Todavía no hiciste ningún análisis'}</div>`}</div>
+        </div>
+        <div>
+          <div class="muted small">${s ? `Último análisis: ${s.type === 'FULL' ? 'completo' : 'rápido'} · ${fmtDate(s.finishedAt)} · ${esc(s.source)}` : 'Elegí qué analizar para empezar.'}</div>
+          ${state.lastResult ? `<div class="small" style="color:var(--green)">${esc(state.lastResult.text)}</div>` : ''}
+          <div class="row" style="margin-top:14px">
+            ${state.running ? '<button class="btn primary big" id="b-see">Ver análisis en curso</button>' : `
+            <button class="btn primary big" id="b-quick">Análisis rápido</button>
+            <button class="btn blue big" id="b-full">Análisis completo</button>`}
+          </div>
+          <p class="small muted" style="margin:10px 0 0">Rápido: todos los archivos por tipo real, nombre, ubicación y contenido; las fotos, audios y videos de más de 2 MB no se hashean. Completo: además calcula el SHA-256 de todo (hasta ${settings.hashMb} MB por archivo).</p>
+          <div class="row" style="margin-top:8px"><span class="small muted">¿Qué analizar?</span>
+            <label class="small"><input type="radio" name="src" value="folder" checked> Una carpeta</label>
+            <label class="small"><input type="radio" name="src" value="files"> Archivos sueltos</label></div>
+        </div>
+      </div>
+      <div class="drop" id="drop" style="margin-top:12px">También podés arrastrar carpetas o archivos acá para un análisis rápido.</div>
+      ${s ? `<h2>Último resultado</h2>
+      <div class="grid g4">
+        <div class="card tile"><div class="n" style="color:${s.critical ? 'var(--crit)' : 'var(--green)'}">${open.filter(f => f.level === 'CRITICAL').length}</div><div class="l">Amenazas confirmadas pendientes</div></div>
+        <div class="card tile"><div class="n" style="color:var(--med)">${open.filter(f => CS.W[f.level] >= 1 && CS.W[f.level] <= 3).length}</div><div class="l">Sospechosos pendientes</div></div>
+        <div class="card tile"><div class="n" style="color:var(--blue)">${s.hidden}</div><div class="l">Ocultos encontrados</div></div>
+        <div class="card tile"><div class="n" style="color:var(--blue)">${s.files}</div><div class="l">Archivos analizados</div></div>
+      </div>` : ''}
+      <h2>Estado de la protección</h2>
+      <div class="card small">
+        <div>Firmas de malware en la base local: <b>${state.sigCount}</b>${state.sigCount <= 1 ? ' <span style="color:var(--med)">(sólo la de prueba EICAR: importá una base en Ajustes)</span>' : ''}</div>
+        <div>Archivos en cuarentena: <b>${state.qCount}</b></div>
+        <div>Cuarentena real (mover y borrar el original): ${window.showDirectoryPicker ? 'disponible si el navegador permite abrir la carpeta con acceso de escritura' : '<span style="color:var(--med)">no disponible en este navegador</span>'}</div>
+      </div>`;
+    const src = () => (main.querySelector('input[name="src"]:checked') || {}).value || 'folder';
+    const bq = $('#b-quick'), bf = $('#b-full'), bs = $('#b-see');
+    if (bq) bq.onclick = () => startFlow(src(), 'QUICK');
+    if (bf) bf.onclick = () => startFlow(src(), 'FULL');
+    if (bs) bs.onclick = () => go('analisis');
+    const drop = $('#drop');
+    drop.ondragover = e => { e.preventDefault(); drop.classList.add('over'); };
+    drop.ondragleave = () => drop.classList.remove('over');
+    drop.ondrop = async e => {
+      e.preventDefault(); drop.classList.remove('over');
+      if (state.running) return;
+      const out = { files: [], dirs: [], errors: 0, source: 'elementos arrastrados' };
+      const items = [...(e.dataTransfer.items || [])].map(i => i.webkitGetAsEntry && i.webkitGetAsEntry()).filter(Boolean);
+      if (items.length) for (const en of items) await walkEntry(en, '', out);
+      else for (const f of e.dataTransfer.files) out.files.push({ file: f, path: f.name });
+      runScan(out, 'QUICK');
+    };
+  }
+
+  // ---------------------------------------------------------------- Análisis en curso
+  async function vAnalisis(main) {
+    if (!state.running) {
+      main.innerHTML = `<h1>Análisis</h1><p class="lead">${esc(state.lastResult ? state.lastResult.text : 'No hay ningún análisis en curso.')}</p>
+        ${state.lastResult ? `<button class="btn primary" id="b-rep">Ver informe</button>` : '<a class="btn primary" href="#inicio" style="text-decoration:none">Ir al inicio</a>'}`;
+      const b = $('#b-rep'); if (b) b.onclick = () => { state.reportId = state.lastResult.id; go('informe'); };
+      return;
+    }
+    main.innerHTML = `<h1>Analizando</h1><p class="lead">Podés cambiar de sección: el análisis sigue mientras esta página esté abierta.</p>
+      <div class="card hero"><div class="ring" id="p-ring"></div>
+        <div><div style="font:600 34px var(--font-display);color:var(--blue)" id="p-pct">…</div><div class="mono muted" id="p-count"></div>
+        <div style="font-weight:600;margin-top:8px" id="p-phase"></div><div class="mono muted" id="p-item" style="min-height:2.6em"></div>
+        <div class="progress" style="margin:12px 0"><div id="p-bar"></div></div>
+        <div class="row"><span>Confirmadas: <b id="p-conf" style="color:var(--crit)">0</b></span><span>Sospechosos: <b id="p-sus" style="color:var(--med)">0</b></span>
+        <span class="spacer"></span><button class="btn danger" id="b-cancel">Cancelar análisis</button></div></div></div>`;
+    $('#b-cancel').onclick = async () => { if (await confirmBox('¿Cancelar el análisis?', 'Se guardarán los resultados obtenidos hasta ahora, marcados como parciales.', 'Cancelar análisis', true)) state.cancel = true; };
+    renderProgressOnly();
+  }
+
+  // ---------------------------------------------------------------- Archivos
+  async function vArchivos(main) {
+    const s = await latestScan();
+    if (!s) { main.innerHTML = '<h1>Archivos</h1><p class="lead">Todavía no hay resultados. Hacé un análisis desde el Inicio.</p>'; return; }
+    const fs = (await Store.findings(s.id)).sort((a, b) => CS.W[b.level] - CS.W[a.level] || a.name.localeCompare(b.name));
+    const risky = fs.filter(f => f.level !== 'SAFE'), hidden = fs.filter(f => f.isHidden);
+    const tab = state.filesFilter;
+    let list = tab === 'hidden' ? hidden : risky.filter(f => CS.W[f.level] >= CS.W[state.minLevel]);
+    main.innerHTML = `<h1>Archivos</h1><p class="lead">Análisis #${s.id} · ${fmtDate(s.finishedAt)} · ${s.files} archivos analizados en ${esc(s.source)}</p>
+      <div class="chips">
+        <button class="chip ${tab === 'risky' ? 'on' : ''}" data-tab="risky">Sospechosos (${risky.length})</button>
+        <button class="chip ${tab === 'hidden' ? 'on' : ''}" data-tab="hidden">Ocultos (${hidden.length})</button>
+      </div>
+      ${tab === 'risky' ? `<div class="chips">${['LOW', 'MEDIUM', 'HIGH', 'CRITICAL'].map(l => `<button class="chip ${state.minLevel === l ? 'on' : ''}" data-min="${l}">${l === 'LOW' ? 'Todos' : CS.LABEL[l] + ' o más'}</button>`).join('')}</div>` : ''}
+      <div class="list" id="lst">${list.length ? list.map(itemHtml).join('') : `<p class="muted">${tab === 'hidden' ? 'No se encontraron archivos ni carpetas ocultas.' : 'No hay archivos con ese nivel de riesgo.'}</p>`}</div>`;
+    main.querySelectorAll('[data-tab]').forEach(b => b.onclick = () => { state.filesFilter = b.dataset.tab; vArchivos(main); });
+    main.querySelectorAll('[data-min]').forEach(b => b.onclick = () => { state.minLevel = b.dataset.min; vArchivos(main); });
+    bindItems(main);
+  }
+
+  // ---------------------------------------------------------------- Detalle
+  async function openFinding(id) {
+    const f = await Store.finding(id); if (!f) return;
+    const trusted = f.sha256 ? await Store.isTrusted(f.sha256) : false;
+    const lv = f.reasons.filter(r => r.startsWith('[')), info = f.reasons.filter(r => !r.startsWith('['));
+    const canQ = !f.isDirectory && (f.status === 'OPEN' || f.status === 'IGNORED') && state.handles.has(f.path);
+    modal(`<div class="row"><h3 style="flex:1">${esc(f.name)}</h3>${pill(f.level)}</div>
+      <div class="L-${f.level}" style="margin-bottom:6px">${esc(f.title)}</div>
+      ${f.status !== 'OPEN' ? `<div class="small" style="color:var(--blue)">Estado: ${statusLabel(f.status)}</div>` : ''}
+      ${lv.length ? `<h2>Por qué tiene este nivel</h2><ul class="reasons">${lv.map(r => `<li>${esc(r)}</li>`).join('')}</ul>` : ''}
+      ${info.length ? `<h2>Información</h2><ul class="reasons muted small">${info.map(r => `<li>${esc(r)}</li>`).join('')}</ul>` : ''}
+      <h2>Datos</h2><dl class="kv">
+        <dt>Ruta</dt><dd>${esc(f.path)}</dd>
+        ${f.isDirectory ? '' : `<dt>Tamaño</dt><dd>${fmtSize(f.size)}</dd><dt>Tipo real (por contenido)</dt><dd>${esc(f.realTypeLabel || 'no determinado')}</dd>`}
+        <dt>Creación</dt><dd>no disponible (el navegador no la informa)</dd>
+        <dt>Modificación</dt><dd>${fmtDate(f.modifiedAt)}</dd>
+        <dt>Oculto</dt><dd>${f.isHidden ? 'Sí' : 'No'}</dd>
+        ${f.packageName ? `<dt>Paquete Android</dt><dd class="mono">${esc(f.packageName)}</dd>` : ''}
+        ${f.sha256 ? `<dt>SHA-256</dt><dd class="mono">${f.sha256}</dd>` : ''}
+      </dl>
+      <h2>Acciones</h2>
+      <div class="row">
+        ${!f.isDirectory && (f.status === 'OPEN' || f.status === 'IGNORED') ? `<button class="btn danger" id="d-q" ${canQ ? '' : 'disabled'}>Poner en cuarentena</button>` : ''}
+        ${f.sha256 && f.level !== 'CRITICAL' && f.status !== 'QUARANTINED' ? `<button class="btn blue" id="d-t">${trusted ? 'Quitar de confiables' : 'Marcar como confiable'}</button>` : ''}
+        ${f.sha256 ? '<button class="btn" id="d-c">Copiar SHA-256</button>' : ''}
+        <span class="spacer"></span><button class="btn" id="d-x">Cerrar</button>
+      </div>
+      ${!f.isDirectory && f.status === 'OPEN' && !canQ ? '<p class="small muted">La cuarentena sólo funciona con carpetas abiertas con acceso de escritura en esta sesión (Chrome o Edge de computadora). Si no, podés borrar el archivo a mano desde la ruta indicada.</p>' : ''}`,
+      (m, close) => {
+        m.querySelector('#d-x').onclick = close;
+        const c = m.querySelector('#d-c'); if (c) c.onclick = () => copy(f.sha256);
+        const q = m.querySelector('#d-q');
+        if (q) q.onclick = async () => {
+          if (!await confirmBox('¿Poner en cuarentena?', `"${f.name}" se guardará aislado y ofuscado dentro del navegador y se quitará de ${f.location}. Se verifica con SHA-256 antes de borrar el original. Podés restaurarlo cuando quieras.`, 'Mover a cuarentena', true)) return;
+          try { await quarantine(f); toast('Archivo movido a cuarentena'); close(); await refreshCounts(); render(); }
+          catch (e) { toast(e.message || String(e)); }
+        };
+        const t = m.querySelector('#d-t');
+        if (t) t.onclick = async () => {
+          const on = !trusted;
+          if (!await confirmBox(on ? '¿Marcar como confiable?' : '¿Quitar de confiables?', on ? 'No contará para el nivel de riesgo en próximos análisis (salvo que coincida con malware conocido). Hacelo sólo si sabés qué es.' : 'Volverá a evaluarse normalmente.', on ? 'Marcar' : 'Quitar')) return;
+          await Store.setTrusted(f.sha256, on);
+          f.status = on ? 'IGNORED' : 'OPEN'; await Store.putFinding(f);
+          await Store.log(on ? 'Marcado como confiable' : 'Quitado de confiables', `${f.path} (${f.sha256})`);
+          toast('Listo'); close(); render();
+        };
+      });
+  }
+
+  // ---------------------------------------------------------------- APK y apps
+  async function vApk(main) {
+    main.innerHTML = `<h1>APK y aplicaciones</h1>
+      <p class="lead">Una página web no puede ver las apps instaladas ni sus permisos: el navegador lo impide por seguridad. Lo que sí podés hacer acá es revisar <b>instaladores APK</b> antes de instalarlos. Se lee su manifiesto sin instalarlos ni ejecutarlos.</p>
+      <div class="row"><button class="btn primary" id="b-apk">Elegir APK…</button><input type="file" id="in-apk" accept=".apk,.xapk,.apks,application/vnd.android.package-archive" class="hidden" multiple></div>
+      <div id="apk-out" class="list" style="margin-top:16px"></div>
+      <h2>Para analizar las apps instaladas</h2>
+      <p class="small muted">La app Android de CyberSentinel revisa origen de instalación, permisos concedidos, accesibilidad y administración del dispositivo activos, e imitaciones de apps conocidas. Necesita compilarse e instalarse en el teléfono.</p>`;
+    const inp = $('#in-apk');
+    $('#b-apk').onclick = () => { inp.value = ''; inp.click(); };
+    inp.onchange = async () => {
+      const out = $('#apk-out'); out.innerHTML = '<p class="muted">Analizando…</p>';
+      const cards = [];
+      for (const file of inp.files) {
+        try {
+          const r = await CS.analyzeFile(file, { path: file.name, hashLimit: settings.hashMb * 1024 * 1024, lookupSig: h => Store.getSig(h), isTrusted: h => Store.isTrusted(h), isCancelled: () => false });
+          let perms = '';
+          if (r.realType === 'APK') {
+            const entries = await CS.zipEntries(file);
+            const me = entries && entries.find(e => e.name === 'AndroidManifest.xml');
+            if (me) {
+              try {
+                const mf = CS.parseAXML(await CS.extractEntry(file, me));
+                perms = `<table class="t"><tr><th>Permiso solicitado</th><th>Sensible</th></tr>${mf.permissions.map(p => `<tr><td>${esc(CS.permLabel(p))}<div class="mono muted">${esc(p)}</div></td><td>${p.startsWith('android.permission.') && CS.permLabel(p) !== p.split('.').pop() ? '<span class="L-MEDIUM">Sí</span>' : 'No'}</td></tr>`).join('')}</table>
+                  ${mf.services.length ? `<div class="small muted" style="margin-top:8px">Servicios: ${mf.services.map(s => esc((s.name || '?') + (s.permission ? ' [' + s.permission.split('.').pop() + ']' : ''))).join(', ')}</div>` : ''}`;
+              } catch (_) { perms = '<p class="small muted">No se pudo leer el manifiesto.</p>'; }
+            }
+          }
+          await Store.log('APK analizado', `${file.name}: ${CS.LABEL[r.level]}`);
+          cards.push(`<div class="card"><div class="row"><b style="flex:1;overflow-wrap:anywhere">${esc(file.name)}</b>${pill(r.level)}</div>
+            <div class="small muted">${esc(r.realTypeLabel)} · ${fmtSize(file.size)}${r.packageName ? ' · ' + esc(r.packageName) : ''}</div>
+            <ul class="reasons small" style="margin-top:8px">${r.reasons.map(x => `<li>${esc(x)}</li>`).join('')}</ul>
+            ${r.sha256 ? `<div class="mono muted" style="margin-top:6px">SHA-256 ${r.sha256}</div>` : ''}${perms}</div>`);
+        } catch (e) { cards.push(`<div class="banner">${esc(file.name)}: ${esc(e.message || e)}</div>`); }
+      }
+      out.innerHTML = cards.join('');
+    };
+  }
+
+  // ---------------------------------------------------------------- Historial
+  async function vHistorial(main) {
+    const scans = await Store.scans();
+    main.innerHTML = `<h1>Historial de análisis</h1><p class="lead">Cada análisis queda guardado en este navegador con sus resultados.</p>
+      <div class="list">${scans.length ? scans.map(s => `<div class="item" style="cursor:default"><span class="stripe s-${s.level}"></span>
+        <span><span class="name">#${s.id} · ${s.type === 'FULL' ? 'Análisis completo' : 'Análisis rápido'} · ${esc(s.source)}</span><br>
+        <span class="sub">${fmtDate(s.startedAt)}${s.status === 'CANCELLED' ? ' · cancelado (parcial)' : s.status === 'FAILED' ? ' · con errores' : ''}</span><br>
+        <span class="sub">${s.files} archivos · ${s.critical} confirmadas · ${s.high + s.medium + s.low} sospechosos · ${s.hidden} ocultos</span></span>
+        <span class="row">${pill(s.level)}<button class="btn ghost" data-rep="${s.id}">Informe</button><button class="btn ghost" data-del="${s.id}" style="color:var(--dim)">Borrar</button></span></div>`).join('') : '<p class="muted">Todavía no hiciste ningún análisis.</p>'}</div>`;
+    main.querySelectorAll('[data-rep]').forEach(b => b.onclick = () => { state.reportId = Number(b.dataset.rep); go('informe'); });
+    main.querySelectorAll('[data-del]').forEach(b => b.onclick = async () => {
+      const id = Number(b.dataset.del);
+      if (!await confirmBox(`¿Borrar el análisis #${id}?`, 'Se borra del historial con sus resultados. No afecta tus archivos ni la cuarentena.', 'Borrar', true)) return;
+      await Store.deleteScan(id); await Store.log('Historial', `Borrado el análisis #${id}`); vHistorial(main);
+    });
+  }
+
+  // ---------------------------------------------------------------- Informe
+  async function vInforme(main) {
+    const s = state.reportId ? await Store.scan(state.reportId) : await latestScan();
+    if (!s) { main.innerHTML = '<h1>Informe</h1><p class="lead">Todavía no hay informes. Hacé un análisis desde el Inicio.</p>'; return; }
+    const fs = (await Store.findings(s.id)).sort((a, b) => CS.W[b.level] - CS.W[a.level]);
+    const lvl = currentLevel(fs), recs = recommendations(s, fs, state.sigCount);
+    const conf = fs.filter(f => f.level === 'CRITICAL'), sus = fs.filter(f => CS.W[f.level] >= 1 && CS.W[f.level] <= 3);
+    main.innerHTML = `<h1>Informe #${s.id}</h1>
+      <p class="lead">${s.type === 'FULL' ? 'Análisis completo' : 'Análisis rápido'} de ${esc(s.source)} · ${fmtDate(s.startedAt)} · duración ${s.finishedAt ? fmtDur(s.finishedAt - s.startedAt) : '—'}</p>
+      <div class="card" style="border-color:${levelColor(lvl)}"><div class="row"><div style="flex:1"><div class="small muted">Nivel general de seguridad</div>
+        <div style="font:600 20px var(--font-display);color:${levelColor(lvl)}">${CS.overallText(lvl)}</div>
+        <div class="small muted">Calculado a partir del hallazgo pendiente más grave. No es un porcentaje.</div></div>${pill(lvl)}</div></div>
+      <div class="grid g4" style="margin-top:12px">
+        <div class="card tile"><div class="n">${s.files}</div><div class="l">Archivos analizados (${s.hashed} con SHA-256)</div></div>
+        <div class="card tile"><div class="n" style="color:var(--blue)">${s.hidden}</div><div class="l">Ocultos</div></div>
+        <div class="card tile"><div class="n" style="color:${s.critical ? 'var(--crit)' : 'var(--green)'}">${s.critical}</div><div class="l">Amenazas confirmadas</div></div>
+        <div class="card tile"><div class="n" style="color:var(--med)">${s.high}/${s.medium}/${s.low}</div><div class="l">Sospechosos ALTO / MEDIO / BAJO</div></div>
+      </div>
+      ${(s.notes || []).length ? `<div class="banner" style="margin-top:12px">${s.notes.map(esc).join('<br>')}</div>` : ''}
+      <div class="row" style="margin-top:14px">
+        <button class="btn primary" id="b-pdf" >Exportar PDF</button>
+        <button class="btn blue" id="b-json" >Exportar JSON</button>
+        <button class="btn" id="b-txt">Copiar resumen</button>
+      </div>
+      <h2>Recomendaciones</h2><ol>${recs.map(r => `<li style="margin:4px 0">${esc(r)}</li>`).join('')}</ol>
+      <h2>Amenazas confirmadas (${conf.length})</h2><div class="list" id="l-c">${conf.length ? conf.map(itemHtml).join('') : '<p class="muted">Ninguna coincidencia con firmas de malware conocidas.</p>'}</div>
+      <h2>Elementos sospechosos (${sus.length})</h2><div class="list" id="l-s">${sus.length ? sus.map(itemHtml).join('') : '<p class="muted">Ninguno.</p>'}</div>
+      <h2>Alcance</h2><p class="small muted">Aplicaciones revisadas: no disponible en la versión web (el navegador no puede ver las apps instaladas). Ubicación analizada: ${esc(s.source)}.</p>`;
+    bindItems(main);
+    const stamp = new Date(s.startedAt).toISOString().slice(0, 16).replace(/[-:T]/g, '');
+    $('#b-pdf').onclick = async () => {
+      try { const buf = await buildPdf(s, fs, recs); if (await save(`CyberSentinel-informe-${s.id}-${stamp}.pdf`, buf)) { await Store.log('Informe PDF exportado', `#${s.id}`); toast('Informe PDF guardado'); } }
+      catch (e) { toast('No se pudo generar el PDF: ' + (e.message || e)); }
+    };
+    $('#b-json').onclick = async () => {
+      const data = JSON.stringify({ app: 'CyberSentinel Web', scan: s, recommendations: recs, findings: fs.map(f => ({ ...f, data: undefined })) }, null, 2);
+      if (await save(`CyberSentinel-informe-${s.id}-${stamp}.json`, data)) { await Store.log('Informe JSON exportado', `#${s.id}`); toast('Informe JSON guardado'); }
+    };
+    $('#b-txt').onclick = () => copy([`CyberSentinel Web — Informe #${s.id} (${fmtDate(s.startedAt)})`, `Nivel: ${CS.LABEL[lvl]} — ${CS.overallText(lvl)}`,
+      `Archivos analizados: ${s.files} · Ocultos: ${s.hidden} · Confirmadas: ${s.critical} · Sospechosos: ${s.high + s.medium + s.low}`, '',
+      'Recomendaciones:', ...recs.map((r, i) => `${i + 1}. ${r}`), '', ...[...conf, ...sus].map(f => `[${CS.LABEL[f.level]}] ${f.path} — ${f.title}`)].join('\n'));
+  }
+
+  // ---------------------------------------------------------------- Cuarentena
+  async function vCuarentena(main) {
+    const list = await Store.qList();
+    main.innerHTML = `<h1>Cuarentena</h1>
+      <p class="lead">Los archivos aislados se guardan ofuscados dentro del almacenamiento privado de esta página: no se pueden abrir ni ejecutar. Nada se borra sin tu confirmación.</p>
+      <div class="list">${list.length ? list.map(q => `<div class="card"><div class="row"><b style="flex:1;overflow-wrap:anywhere">${esc(q.name)}</b><span class="small muted">${fmtSize(q.size)}</span></div>
+        <div class="small muted">Desde: ${esc(q.path)} · ${fmtDate(q.at)} · ${esc(q.reason)}</div><div class="mono muted">SHA-256 ${q.sha}</div>
+        <div class="row" style="margin-top:8px"><button class="btn ghost" data-r="${q.id}" style="color:var(--green)" ${q.parent ? '' : 'disabled'}>Restaurar</button>
+        <button class="btn ghost" data-d="${q.id}" style="color:var(--crit)">Eliminar definitivamente</button></div></div>`).join('') : '<p class="muted">No hay archivos en cuarentena.</p>'}</div>`;
+    main.querySelectorAll('[data-r]').forEach(b => b.onclick = async () => {
+      const q = await Store.qGet(Number(b.dataset.r));
+      if (!await confirmBox(`¿Restaurar "${q.name}"?`, `Volverá a ${q.path}. Si el archivo es malicioso, podría volver a ser un riesgo.`, 'Restaurar')) return;
+      try { const n = await restore(q); toast('Restaurado como ' + n); } catch (e) { toast(e.message || String(e)); }
+      await refreshCounts(); vCuarentena(main);
+    });
+    main.querySelectorAll('[data-d]').forEach(b => b.onclick = async () => {
+      const q = await Store.qGet(Number(b.dataset.d));
+      if (!await confirmBox('¿Eliminar definitivamente?', `"${q.name}" se borrará para siempre. Esta acción no se puede deshacer.`, 'Eliminar', true)) return;
+      await deleteQ(q); toast('Eliminado definitivamente'); await refreshCounts(); vCuarentena(main);
+    });
+  }
+
+  // ---------------------------------------------------------------- Ajustes
+  async function vAjustes(main) {
+    const sources = await Store.sigSources();
+    const trusted = await Store.trustedList();
+    main.innerHTML = `<h1>Configuración</h1>
+      <h2>Base de firmas (SHA-256)</h2>
+      <div class="card">
+        <div style="font-weight:600">${state.sigCount} firmas en la base local</div>
+        <p class="small muted">Un archivo se marca CRÍTICO sólo si su SHA-256 coincide exactamente con una de estas firmas. De fábrica sólo está la firma de prueba EICAR. Para detectar malware real, descargá una lista de hashes (por ejemplo, la exportación de SHA-256 de MalwareBazaar, de abuse.ch, en .txt, .csv o .zip) y elegila acá. Se importa en este navegador, sin subir nada.</p>
+        <table class="t">${sources.map(([src, n]) => `<tr><td>${esc(src)}</td><td style="text-align:right">${n}</td><td style="text-align:right">${src === 'Incluida' ? '' : `<button class="btn ghost" data-src="${esc(src)}" style="color:var(--crit)">Quitar</button>`}</td></tr>`).join('')}</table>
+        <div class="row" style="margin-top:10px"><button class="btn primary" id="b-imp">Importar archivo de firmas</button><span class="small muted" id="imp-st"></span>
+          <input type="file" id="in-sig" class="hidden" accept=".txt,.csv,.zip,text/plain,text/csv,application/zip"></div>
+        <div class="row" style="margin-top:12px"><input type="text" id="h-in" placeholder="SHA-256 (64 caracteres)" style="flex:2;min-width:220px" aria-label="SHA-256"><input type="text" id="h-name" placeholder="Nombre de la amenaza" style="flex:1;min-width:140px" aria-label="Nombre de la amenaza"><button class="btn" id="b-h">Agregar</button></div>
+      </div>
+      <h2>Análisis</h2>
+      <div class="card"><label for="mb">Calcular SHA-256 hasta <b id="mb-v">${settings.hashMb}</b> MB por archivo</label>
+        <input type="range" id="mb" min="10" max="1000" step="10" value="${settings.hashMb}" style="width:100%">
+        <p class="small muted">Los archivos más grandes se analizan por tipo, nombre, ubicación y contenido inicial, sin hash (se indica en el informe).</p></div>
+      ${trusted.length ? `<h2>Marcados como confiables</h2><div class="card"><table class="t">${trusted.map(h => `<tr><td class="mono">${h}</td><td style="text-align:right"><button class="btn ghost" data-tr="${h}">Quitar</button></td></tr>`).join('')}</table></div>` : ''}
+      <h2>Usar sin depender de esta página</h2>
+      <div class="card"><p class="small muted" style="margin-top:0">Guardá la herramienta como un único archivo .html y abrilo en Chrome o Edge de tu computadora. Abierto así, el navegador permite elegir carpetas con acceso de escritura y la cuarentena funciona de verdad.</p>
+        <button class="btn blue" id="b-self" >Descargar CyberSentinel.html</button></div>
+      <h2>Privacidad y permisos</h2>
+      <div class="card small"><ul class="reasons">
+        <li>Todo el análisis ocurre en tu navegador. La página no puede conectarse a servidores externos: ningún archivo ni resultado sale de tu dispositivo.</li>
+        <li>Sólo lee las carpetas o archivos que vos elegís, y sólo durante esta sesión.</li>
+        <li>Para la cuarentena pide permiso de escritura sobre la carpeta elegida; lo usa sólo cuando confirmás.</li>
+        <li>Historial, firmas, cuarentena y registro se guardan en el almacenamiento de este navegador. Si borrás los datos del sitio, se pierden.</li>
+      </ul><div class="row" style="margin-top:8px"><a href="#registro">Ver registro de acciones</a></div></div>`;
+    const st = $('#imp-st'), inp = $('#in-sig');
+    $('#b-imp').onclick = () => { inp.value = ''; inp.click(); };
+    inp.onchange = async () => {
+      const file = inp.files[0]; if (!file) return;
+      $('#b-imp').disabled = true; st.textContent = 'Importando…';
+      try {
+        const r = await importSignatures(file, n => { st.textContent = `Importando… ${n} leídas`; });
+        toast(r.read ? `${r.read} hashes leídos, ${r.added} nuevos` : 'El archivo no contiene hashes SHA-256 válidos');
+      } catch (e) { toast('No se pudo importar: ' + (e.message || e)); }
+      await refreshCounts(); vAjustes(main);
+    };
+    $('#b-h').onclick = async () => {
+      const h = $('#h-in').value.trim().toLowerCase();
+      if (!/^[0-9a-f]{64}$/.test(h)) { toast('Eso no es un SHA-256 válido (64 caracteres hexadecimales)'); return; }
+      const name = $('#h-name').value.trim() || 'Firma agregada manualmente';
+      const n = await Store.putSigs([{ h, name, source: 'Manual' }]);
+      await Store.log('Firma agregada', `${h} — ${name}`);
+      toast(n ? 'Firma agregada' : 'Esa firma ya estaba en la base'); await refreshCounts(); vAjustes(main);
+    };
+    const mb = $('#mb');
+    mb.oninput = () => { $('#mb-v').textContent = mb.value; };
+    mb.onchange = () => { settings.hashMb = Number(mb.value); toast('Límite guardado'); };
+    main.querySelectorAll('[data-src]').forEach(b => b.onclick = async () => {
+      if (!await confirmBox('¿Quitar firmas?', `Se eliminarán todas las firmas de "${b.dataset.src}".`, 'Quitar', true)) return;
+      await Store.deleteSource(b.dataset.src); await Store.log('Firmas eliminadas', b.dataset.src); await refreshCounts(); vAjustes(main);
+    });
+    main.querySelectorAll('[data-tr]').forEach(b => b.onclick = async () => { await Store.setTrusted(b.dataset.tr, false); await Store.log('Quitado de confiables', b.dataset.tr); vAjustes(main); });
+    $('#b-self').onclick = () => save('CyberSentinel.html', SELF_HTML);
+  }
+
+  // ---------------------------------------------------------------- Registro
+  async function vRegistro(main) {
+    const l = await Store.logs();
+    main.innerHTML = `<h1>Registro de acciones</h1><p class="lead">Análisis, cuarentenas, restauraciones, importaciones y exportaciones, con fecha y hora.</p>
+      <div class="card">${l.length ? `<table class="t"><tr><th>Fecha</th><th>Acción</th><th>Detalle</th></tr>${l.map(e => `<tr><td style="white-space:nowrap">${fmtDate(e.ts)}</td><td style="color:var(--green)">${esc(e.action)}</td><td style="overflow-wrap:anywhere">${esc(e.detail)}</td></tr>`).join('')}</table>` : '<p class="muted">El registro está vacío.</p>'}</div>`;
+  }
+
+  // ================================================================ arranque
+  (async () => {
+    await Store.open();
+    try { if (!(await Store.getSig(EICAR_SHA))) await Store.putSigs([{ h: EICAR_SHA, name: 'EICAR-Test-File (archivo de prueba estándar)', source: 'Incluida' }]); } catch (_) { }
+    await refreshCounts();
+    render();
+    // La función de descargas la provee el visor de Claude; puede llegar un poco después de cargar.
+    for (let i = 0; i < 20 && !state.downloads; i++) {
+      try {
+        if (window.claude && typeof window.claude.use === 'function') {
+          state.downloads = await window.claude.use('downloads');
+          if (state.downloads && (state.view === 'informe' || state.view === 'ajustes')) render();
+          break;
+        }
+      } catch (_) { break; }
+      await new Promise(r => setTimeout(r, 500));
+    }
+  })();
+})();
+
+</script>
+</body>
+</html>
