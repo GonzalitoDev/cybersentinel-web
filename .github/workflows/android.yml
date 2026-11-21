@@ -44,10 +44,25 @@ jobs:
 
       - id: build
         name: Compilar APK
+        env:
+          KEYSTORE_B64: ${{ secrets.CS_KEYSTORE_BASE64 }}
+          CS_KEYSTORE_PASSWORD: ${{ secrets.CS_KEYSTORE_PASSWORD }}
+          CS_KEY_ALIAS: ${{ secrets.CS_KEY_ALIAS }}
+          CS_KEY_PASSWORD: ${{ secrets.CS_KEY_PASSWORD }}
         run: |
           set -o pipefail
-          ./gradlew --no-daemon assembleDebug 2>&1 | tee ../build.log
-          cp app/build/outputs/apk/debug/app-debug.apk CyberSentinel-Mobile.apk
+          if [ -n "$KEYSTORE_B64" ]; then
+            echo "$KEYSTORE_B64" | base64 -d > "$RUNNER_TEMP/release.jks"
+            export CS_KEYSTORE_FILE="$RUNNER_TEMP/release.jks"
+            ./gradlew --no-daemon assembleRelease 2>&1 | tee ../build.log
+            cp app/build/outputs/apk/release/app-release.apk CyberSentinel-Mobile.apk
+            echo "Firmado con la clave de publicación." >> "$GITHUB_STEP_SUMMARY"
+          else
+            echo "::warning::Sin secretos de firma: se compila con la clave de depuración."
+            ./gradlew --no-daemon assembleDebug 2>&1 | tee ../build.log
+            cp app/build/outputs/apk/debug/app-debug.apk CyberSentinel-Mobile.apk
+          fi
+          rm -f "$RUNNER_TEMP/release.jks"
 
       - name: Mostrar errores
         if: failure()
@@ -81,7 +96,7 @@ jobs:
           tag_name: apk-latest
           name: CyberSentinel Mobile (última compilación)
           body: |
-            APK compilado automáticamente desde `main` (firmado con clave de depuración).
+            APK compilado automáticamente desde `main` y firmado con la clave de publicación de GonzaDev (SHA-256 del certificado: BD:21:0C:CB:F7:94:28:9F:FF:8C:59:3A:B5:83:72:9F:94:90:99:E8:18:AF:96:6B:F1:E6:F1:BA:9D:BC:8D:83).
             Para instalarlo, permití "instalar apps desconocidas" para tu navegador o gestor de archivos.
           files: android/CyberSentinel-Mobile.apk
           make_latest: true

@@ -12,14 +12,33 @@ android {
         applicationId = "com.cybersentinel.mobile"
         minSdk = 26
         targetSdk = 35
-        versionCode = 1
-        versionName = "1.0.0"
+        versionCode = 2
+        versionName = "1.0.1"
+    }
+
+    // Firma de publicación: se toma de variables de entorno (secretos de GitHub Actions).
+    // Nunca se guarda la clave ni las contraseñas en el repositorio.
+    val keystorePath = System.getenv("CS_KEYSTORE_FILE")
+    val hasReleaseKey = !keystorePath.isNullOrBlank() && file(keystorePath).exists()
+
+    signingConfigs {
+        if (hasReleaseKey) {
+            create("release") {
+                storeFile = file(keystorePath!!)
+                storePassword = System.getenv("CS_KEYSTORE_PASSWORD")
+                keyAlias = System.getenv("CS_KEY_ALIAS")
+                keyPassword = System.getenv("CS_KEY_PASSWORD")
+                enableV1Signing = true
+                enableV2Signing = true
+            }
+        }
     }
 
     buildTypes {
         release {
-            isMinifyEnabled = true
-            isShrinkResources = true
+            if (hasReleaseKey) signingConfig = signingConfigs.getByName("release")
+            isMinifyEnabled = false
+            isShrinkResources = false
             proguardFiles(
                 getDefaultProguardFile("proguard-android-optimize.txt"),
                 "proguard-rules.pro"

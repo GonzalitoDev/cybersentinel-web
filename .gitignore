@@ -1,0 +1,5 @@
+
+# Claves de firma: nunca al repo
+*.jks
+*.keystore
+SECRETOS*.txt
