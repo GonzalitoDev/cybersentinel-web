@@ -1,0 +1,11 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <color name="cs_background">#FF0A0F16</color>
+    <color name="cs_icon_bg">#FF0D1B2A</color>
+
+    <style name="Theme.CyberSentinel" parent="android:Theme.Material.NoActionBar">
+        <item name="android:windowBackground">@color/cs_background</item>
+        <item name="android:statusBarColor">@color/cs_background</item>
+        <item name="android:navigationBarColor">@color/cs_background</item>
+    </style>
+</resources>
